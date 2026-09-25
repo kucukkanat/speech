@@ -67,7 +67,8 @@ describe("createVoiceStore", () => {
     const events: number[] = [];
     voices.subscribe((s) => events.push(s.voices.length));
     await voices.ready;
-    const audio = encodeWav(recording(48000, 12), 48000); // 14 s: 1 s quiet, 12 s "speech", 1 s quiet
+    // 14 s: 1 s quiet, 12 s "speech", 1 s quiet — at the clip rate, so the test measures the store, not resampling.
+    const audio = encodeWav(recording(24000, 12), 24000);
     const a = await voices.create({ name: "A", audio, meta: { tag: "first" } });
     await new Promise((r) => setTimeout(r, 2)); // distinct createdAt
     const b = await voices.create({ name: "B", audio, meta: { tag: "second" }, crop: false });
