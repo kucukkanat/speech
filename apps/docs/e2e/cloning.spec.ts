@@ -23,3 +23,20 @@ test("the voice cloning guide records a voice from the microphone and speaks wit
   await expect(cloned.getByTestId("karaoke-sentence").first()).toBeVisible();
   await expect(demo.getByTestId("demo-error")).toHaveCount(0);
 });
+
+test("the TTS page's 'Clone a voice' section records and clones a voice", async ({ page }) => {
+  await page.goto("packages/tts#clone-a-voice");
+  const demo = page.getByTestId("try-cloning");
+  await expect(page.getByRole("heading", { name: "Record a voice from the microphone" })).toBeVisible();
+  const record = demo.getByTestId("voice-record");
+  await record.click();
+  await expect(record).toHaveAttribute("data-state", "recording");
+  await page.waitForTimeout(6_000);
+  await record.click();
+  await expect(demo.getByTestId("cloned-voice")).toBeVisible({ timeout: 60_000 });
+  await demo.getByTestId("model-load").click();
+  const speak = demo.getByTestId("speak-button");
+  await speak.click({ timeout: 5 * 60_000 });
+  await expect(speak).toHaveAttribute("data-state", "ended", { timeout: 5 * 60_000 });
+  await expect(demo.getByTestId("demo-error")).toHaveCount(0);
+});

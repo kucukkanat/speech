@@ -61,6 +61,42 @@ const pcm = new Float32Array(24_000 * 6); // 6 s of audio you captured yourself
 await tts.speak("From raw samples.", { voice: { pcm, sampleRate: 24_000 } });
 ```
 
+### Record a voice from the microphone
+
+Record the speaker with `startRecording()` from `@kucukkanat/speech-audio` (installed with this package), then pass
+the recording as the `voice`:
+
+```ts
+import { startRecording } from "@kucukkanat/speech-audio";
+import { createTTS } from "@kucukkanat/tts";
+
+const tts = createTTS();
+let voice: Blob | null = null;
+
+// Start from a click: the browser asks for microphone permission the first time.
+document.querySelector("#record")?.addEventListener("click", async () => {
+  const recording = await startRecording({ maxSeconds: 15 }); // stops by itself after 15 s
+  recording.on("time", (seconds) => console.log(`recording… ${seconds.toFixed(0)} s`));
+  document.querySelector("#stop")?.addEventListener("click", () => recording.stop(), { once: true });
+  voice = await recording.done; // the recorded clip (webm/opus, mp4 or ogg, depending on the browser)
+});
+
+// Then speak anything in the recorded voice.
+document.querySelector("#speak")?.addEventListener("click", async () => {
+  if (voice) await tts.speak("This is a clone of the voice you just recorded.", { voice });
+});
+```
+
+Aim for 5–10 seconds of one person reading naturally in a quiet room: the model copies the voice and the recording's
+character (echo, microphone tone). The recording is used as-is; to crop it to its best stretch automatically and keep
+it across reloads, save it with `voices.create({ name, audio: voice, meta: {} })` from
+[`@kucukkanat/voices`](/packages/voices) and speak with the saved record.
+
+Try it: record yourself, then press speak.
+
+<TryCloning />
+
+
 Learning a voice ("encoding") takes about a second the first time and is cached, so later calls with the same voice
 start immediately. To keep voices across reloads, pass a persistent cache — or use
 [`@kucukkanat/voices`](/packages/voices), a ready-made voice library:
