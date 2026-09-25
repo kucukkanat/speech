@@ -1,0 +1,53 @@
+---
+title: Handling errors
+description: Every SDK failure is a SpeechError with a stable code and a message you can show to users.
+icon: triangle-alert
+---
+
+Errors are part of the API: each one is a `SpeechError` whose `code` you can branch on and whose `message` is written
+for end users. Cancelling is not an error you need to special-case beyond `isAbortError`.
+
+```ts
+import { isAbortError, isSpeechError, SpeechError } from "@kucukkanat/speech-core";
+
+function describe(e: unknown): string {
+  if (isAbortError(e)) return "Cancelled.";
+  if (isSpeechError(e, "mic-permission-denied")) return "Please allow the microphone.";
+  if (e instanceof SpeechError) return `${e.code}: ${e.message}`;
+  return "Something unexpected went wrong.";
+}
+console.log(describe(new SpeechError("busy", "One session at a time.")));
+```
+
+`isSpeechError(e, code)` narrows the type, so the code is autocompleted and typos are compile errors. The engine
+packages re-export it, so `import { isSpeechError } from "@kucukkanat/tts"` works too.
+
+## Codes
+
+| Area | Codes |
+|---|---|
+| Engines | `worker-crashed`, `disposed`, `internal`, `unsupported-environment`, `insecure-context` |
+| Models | `model-download-failed`, `model-init-failed`, `model-not-loaded`, `webgpu-required`, `unknown-model` |
+| Speech | `empty-text`, `invalid-voice`, `unsupported-option`, `generation-failed`, `autoplay-blocked` |
+| Transcription | `busy`, `decode-failed` |
+| Microphone | `mic-permission-denied`, `mic-not-found`, `mic-busy`, `mic-unsupported`, `mic-insecure-context`, `mic-unknown` |
+| Voice library | `voice-not-found`, `built-in-read-only`, `db-blocked`, `quota-exceeded` |
+
+## Where errors show up
+
+- **Promises** (`speak()`, `transcribe()`, `load()`, `voices.create()`, …) reject with the error.
+- **Engine status**: a failed load also moves `status` to `{ state: "error", error }`, so a status-driven UI (or
+  `useEngine`) shows it without a `try`.
+- **React hooks** keep the last failure in `error` (`useSpeak`, `useTranscription`, `useVoices`).
+- **Stopping is not failing**: `speech.stop()` resolves with `stopped: true`; `session.stop()` resolves the final
+  transcript. Only an `AbortSignal` rejects, with the signal's reason.
+
+## Common cases
+
+| Code | Why | What to do |
+|---|---|---|
+| `webgpu-required` | Chatterbox and Voxtral need WebGPU in browsers | Check `detectCapabilities()` first; offer Moonshine for speech-to-text |
+| `autoplay-blocked` | Audio started without a user gesture | Call `speak()` from a click or key press the first time |
+| `mic-permission-denied` | The user or browser blocked the microphone | Show `e.message`; it explains how to re-enable it |
+| `busy` | A second transcription on the same engine | Stop the running session, or create another engine |
+| `db-blocked` | Another tab holds an older voice database open | Ask the user to close other tabs; `snapshot.error` clears afterwards |

@@ -1,0 +1,20 @@
+---
+title: Playground
+description: Every feature of the SDKs, live in your browser. Pick a model, clone a voice, speak with karaoke highlighting, and dictate.
+icon: play
+---
+
+<Playground />
+
+Everything runs on this device: models download from Hugging Face the first time (then come from the browser cache),
+voices you add are stored in this browser's IndexedDB, and no audio or text is sent anywhere.
+
+:::note
+Text-to-speech needs **WebGPU**. Speech-to-text runs everywhere with Moonshine; Voxtral Realtime needs WebGPU and a
+strong GPU (a 2.85 GB download).
+:::
+
+The playground is built with the same public API these docs describe: [`useSpeak`](/packages/react),
+[`useTranscription`](/packages/react#live-transcription) and [`useVoices`](/packages/react#a-voice-picker), with shared
+engines created once per page. Its source is in
+[`apps/docs/lib`](https://github.com/kucukkanat/speech/tree/main/apps/docs/lib).

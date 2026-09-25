@@ -10,3 +10,4 @@ playwright-report
 fixtures/*/node_modules
 fixtures/*/bun.lock
 fixtures/*/dist
+.blume

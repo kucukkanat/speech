@@ -1,6 +1,10 @@
-# @kucukkanat/speech-audio
+---
+title: "Audio utilities"
+description: "Browser audio building blocks behind the speech SDKs, useful on their own: microphone frames, gapless playback, recording, and WAV decoding and resampling."
+icon: audio-waveform
+---
 
-Browser audio building blocks behind the [`@kucukkanat`](../..) speech SDKs — useful on their own:
+`@kucukkanat/speech-audio` · [source](https://github.com/kucukkanat/speech/tree/main/packages/speech-audio)
 
 - **`openMicrophone()`**: microphone audio as an async iterable of 16 kHz frames (resampled in an AudioWorklet that
   needs no bundler config), with levels and typed permission errors.
@@ -8,8 +12,6 @@ Browser audio building blocks behind the [`@kucukkanat`](../..) speech SDKs — 
 - **`startRecording()`**: record a compressed clip with live level and elapsed time.
 - **`decodeAudio()` / `encodeWav()` / `resample()`**: decode any file or URL to mono PCM, write WAVs, change sample
   rates (band-limited). WAV decoding and resampling are pure JS and work in workers, Node and Bun.
-
-**[Documentation](https://kucukkanat.github.io/speech/packages/audio) · [Playground](https://kucukkanat.github.io/speech/playground)**
 
 ```sh
 bun add @kucukkanat/speech-audio
@@ -84,7 +86,3 @@ const bar = document.querySelector<HTMLElement>("#level");
 const stop = createLevelMeter(player.analyser, (level) => bar?.style.setProperty("width", `${level * 100}%`), { gain: 4 });
 setTimeout(stop, 10_000);
 ```
-
-## License
-
-MIT

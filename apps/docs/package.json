@@ -1,0 +1,30 @@
+{
+  "name": "@kucukkanat/docs",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "predev": "bun run --cwd ../../packages/speech-core build",
+    "dev": "blume dev",
+    "prebuild": "bun run --cwd ../../packages/speech-core build",
+    "build": "blume build",
+    "preview": "blume preview",
+    "validate": "blume validate",
+    "typecheck": "tsc -p .",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@kucukkanat/speech-audio": "workspace:*",
+    "@kucukkanat/speech-core": "workspace:*",
+    "@kucukkanat/speech-react": "workspace:*",
+    "@kucukkanat/stt": "workspace:*",
+    "@kucukkanat/tts": "workspace:*",
+    "@kucukkanat/voices": "workspace:*",
+    "blume": "2.0.3",
+    "react": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "~5.9"
+  }
+}

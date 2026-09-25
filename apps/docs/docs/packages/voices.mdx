@@ -1,15 +1,16 @@
-# @kucukkanat/voices
+---
+title: "Voice library"
+description: "A persistent voice library for @kucukkanat/tts: voices live in IndexedDB, come with two bundled demo voices, and remember their encodings so a saved voice speaks instantly after a reload."
+icon: users
+---
 
-A persistent **voice library** for [`@kucukkanat/tts`](../tts): voices live in IndexedDB, come with two bundled demo
-voices, and remember their encodings so a saved voice speaks instantly after a reload.
-
-**[Documentation](https://kucukkanat.github.io/speech/packages/voices) · [Playground](https://kucukkanat.github.io/speech/playground)**
+`@kucukkanat/voices` · [source](https://github.com/kucukkanat/speech/tree/main/packages/voices)
 
 - **Any recording in, a clean reference clip out**: cropped to the best 5–10 s, zero-crossing cuts, peak-normalised.
 - **Records plug straight into TTS**: `tts.speak(text, { voice: record })`.
 - **Your metadata, typed**: colours, emoji, tags — `createVoiceStore<{ color: string }>()`.
 - **Reactive**: a stable `snapshot` + `subscribe` (ready for `useSyncExternalStore`, or use `useVoices` from
-  [`@kucukkanat/speech-react`](../speech-react)).
+  [`@kucukkanat/speech-react`](/packages/react)).
 
 ```sh
 bun add @kucukkanat/voices @kucukkanat/tts
@@ -53,6 +54,8 @@ console.log(`${me.name}: ${me.seconds.toFixed(1)} s clip`);
 
 Cropping options: `crop: "auto"` (default, the most energetic stretch of up to 10 s), `crop: false` (keep everything up
 to `maxSeconds`), or `crop: { start, end }` in seconds — for example from your own waveform selector.
+
+<TryVoices />
 
 ## Your own metadata
 
@@ -131,7 +134,3 @@ console.log(peaks.length, clip.seconds, clip.wav.type); // 800, ≤10, "audio/wa
   into `meta`.
 - The demo voices are bundled audio files referenced with `new URL(…, import.meta.url)`; every mainstream bundler
   serves them automatically. Pass `demos` to ship your own starter voices instead.
-
-## License
-
-MIT. Demo voices from [LibriTTS-R](https://www.openslr.org/141/) (CC BY 4.0) — see [assets/CREDITS.md](./assets/CREDITS.md).

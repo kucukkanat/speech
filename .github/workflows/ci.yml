@@ -13,12 +13,16 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
+      - uses: actions/setup-node@v4 # the docs site (Blume) builds on Node 22.12+
+        with:
+          node-version: 24
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run typecheck
       - run: bun run test # unit + integration, 100% coverage threshold
-      - run: bun run build
+      - run: bun run build # packages, Voice Lab and the docs site
       - run: bun run check:packages # publint + are-the-types-wrong
-      - run: bun run docs:check # every README example typechecks
+      - run: bun run docs:check # every README and docs-site example typechecks
+      - run: bun run --cwd apps/docs validate # no broken links in the docs site
       - run: bunx playwright install --with-deps chromium
       - run: bun run test:consumers # packed tarballs in a fresh Vite app, dev + production build

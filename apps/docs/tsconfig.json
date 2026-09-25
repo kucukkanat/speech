@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["@webgpu/types", "bun"]
+  },
+  "include": ["blume.config.ts", "islands", "lib", "e2e", "playwright.config.ts"]
+}

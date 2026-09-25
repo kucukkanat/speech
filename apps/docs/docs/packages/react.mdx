@@ -1,9 +1,10 @@
-# @kucukkanat/speech-react
+---
+title: "React hooks"
+description: "React hooks for the @kucukkanat speech SDKs. Each hook takes the engine you created — no provider, no context, nothing hidden — and re-renders only when something visible changes."
+icon: atom
+---
 
-React hooks for the [`@kucukkanat`](../..) speech SDKs. Each hook takes the engine you created — no provider, no
-context, nothing hidden — and re-renders only when something visible changes.
-
-**[Documentation](https://kucukkanat.github.io/speech/packages/react) · [Playground](https://kucukkanat.github.io/speech/playground)**
+`@kucukkanat/speech-react` · [source](https://github.com/kucukkanat/speech/tree/main/packages/speech-react)
 
 ```sh
 bun add @kucukkanat/speech-react @kucukkanat/tts @kucukkanat/stt @kucukkanat/voices
@@ -140,7 +141,3 @@ export function Pulse() {
 - Works with React 18.3+ and 19; the bundle is marked `"use client"` for React Server Components frameworks.
 - Hooks are SSR-safe: on the server they render the engines' current (idle) state.
 - Unmounting stops a speech or transcription the hook started.
-
-## License
-
-MIT

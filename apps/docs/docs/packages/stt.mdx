@@ -1,10 +1,10 @@
-# @kucukkanat/stt
+---
+title: "Speech-to-text"
+description: "On-device, streaming speech-to-text for the browser. Runs Moonshine or Voxtral Realtime on WebGPU (or WASM) in a Web Worker: no server, no API key, nothing leaves the device."
+icon: mic
+---
 
-On-device, streaming **speech-to-text for the browser**. Runs [Moonshine](https://huggingface.co/onnx-community/moonshine-base-ONNX)
-or [Voxtral Realtime](https://huggingface.co/onnx-community/Voxtral-Mini-4B-Realtime-2602-ONNX) on WebGPU (or WASM) in a
-Web Worker: no server, no API key, nothing leaves the device.
-
-**[Documentation](https://kucukkanat.github.io/speech/packages/stt) · [Playground](https://kucukkanat.github.io/speech/playground)**
+`@kucukkanat/stt` · [source](https://github.com/kucukkanat/speech/tree/main/packages/stt)
 
 - **Live microphone transcription in three lines**, with words appearing as you speak.
 - **One verb for every input**: a microphone, a file, a URL, raw PCM, or any async stream of audio frames.
@@ -37,6 +37,8 @@ document.querySelector("#start")?.addEventListener("click", async () => {
 
 `listen()` returns immediately; `await session.ready` resolves once audio is flowing — the moment to show "listening".
 The model downloads on first use (~158 MB for Moonshine) and is cached by the browser.
+
+<TryTranscribe />
 
 ## Transcribe a file, URL or recording
 
@@ -89,7 +91,7 @@ session.on("update", ({ text }) => console.log(text));
 console.log((await session).text);
 ```
 
-Use `openMicrophone()` from [`@kucukkanat/speech-audio`](../speech-audio) if you want the microphone frames for
+Use `openMicrophone()` from [`@kucukkanat/speech-audio`](/packages/audio) if you want the microphone frames for
 something else as well — a `Microphone` is exactly such a stream.
 
 ## Models
@@ -136,10 +138,6 @@ Codes you may see: `mic-permission-denied`, `mic-not-found`, `mic-busy`, `mic-un
 
 ## Bundlers and hosting
 
-Same as [`@kucukkanat/tts`](../tts#bundlers): the worker is picked up automatically by Vite (use
+Same as [`@kucukkanat/tts`](/packages/tts#bundlers): the worker is picked up automatically by Vite (use
 `speechSdk()` from `@kucukkanat/speech-core/vite`), webpack 5 and Next.js; `@kucukkanat/stt/worker` is exported for
 custom setups. The microphone needs a secure context (HTTPS or localhost); cross-origin isolation is optional.
-
-## License
-
-MIT. Models: Moonshine (MIT, Useful Sensors) and Voxtral Mini Realtime (Apache-2.0, Mistral AI).

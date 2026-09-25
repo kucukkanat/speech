@@ -1,0 +1,63 @@
+---
+title: Hosting and deployment
+description: What your pages need to serve the SDKs, how to self-host models for strict CSP or offline use, and how bundlers pick up the workers.
+icon: server
+---
+
+## Requirements
+
+- **HTTPS** (or `localhost`) for the microphone.
+- **WebGPU** for text-to-speech. Nothing to configure, but check with `detectCapabilities()` and explain it to users
+  whose browser lacks it.
+- **Cross-origin isolation is optional.** It makes the WASM fallback multi-threaded. If you enable it, use
+  `Cross-Origin-Embedder-Policy: credentialless`, not `require-corp`, which would block model downloads from Hugging
+  Face:
+
+```txt
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: credentialless
+```
+
+Static hosts that can't set headers, like GitHub Pages (which serves this site), work fine without it.
+
+## Bundlers
+
+The engines create their workers with `new Worker(new URL("./tts.worker.js", import.meta.url), { type: "module" })`,
+which Vite, webpack 5, Next.js and Rspack bundle automatically.
+
+- **Vite**: add `speechSdk()` from `@kucukkanat/speech-core/vite`. It keeps the packages out of dependency
+  pre-bundling (where workers would be lost), emits ES-module workers, and with `isolation: true` serves dev and preview
+  cross-origin isolated.
+- **Next.js**: use the engines from client components only (`"use client"`); they need browser APIs.
+- **Anything else**: bundle the worker entry yourself and pass a factory:
+
+```ts no-check
+import TtsWorker from "@kucukkanat/tts/worker?worker";
+const tts = createTTS({ worker: () => new TtsWorker() });
+```
+
+## Self-hosting models
+
+By default models come from Hugging Face and are cached in the browser's Cache Storage. For a strict
+Content-Security-Policy, an intranet, or full offline control, mirror the repositories and point the engines at them:
+
+```ts
+import { createSTT } from "@kucukkanat/stt";
+import { createTTS } from "@kucukkanat/tts";
+
+const transformers = {
+  remoteHost: "https://models.example.com/", // serves <repo>/resolve/main/<file>, like huggingface.co
+  wasmPaths: "https://static.example.com/ort/", // ONNX Runtime's .wasm/.mjs files
+};
+const tts = createTTS({ transformers });
+const stt = createSTT({ transformers });
+```
+
+The repositories are listed on each model (`TTS_MODELS[key].repo`, `STT_MODELS[key].repo`).
+
+## Content-Security-Policy
+
+- `worker-src 'self' blob:`: the engines' workers, plus the microphone's AudioWorklet (loaded from a Blob URL). If
+  `blob:` isn't allowed, serve `micWorkletSource()` yourself and pass `workletUrl` to `openMicrophone()`.
+- `connect-src` must include where models come from (`https://huggingface.co` and its CDN, or your `remoteHost`).
+- `script-src 'wasm-unsafe-eval'` for ONNX Runtime's WebAssembly.

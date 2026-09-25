@@ -1,0 +1,87 @@
+---
+title: Getting started
+description: Install the packages, add the Vite plugin, and speak your first sentence.
+icon: rocket
+---
+
+<Steps>
+  <Step title="Install">
+    Add the engines you need. Each one pulls in `@kucukkanat/speech-core` and `@kucukkanat/speech-audio`.
+
+    ```sh
+    bun add @kucukkanat/tts @kucukkanat/stt @kucukkanat/voices   # or npm i / pnpm add
+    bun add @kucukkanat/speech-react                             # optional: React hooks
+    ```
+  </Step>
+  <Step title="Configure your bundler">
+    The models run in Web Workers that ship inside the packages. Vite needs one plugin to keep them out of dependency
+    pre-bundling (webpack 5, Next.js and Rspack pick them up with no configuration):
+
+    ```ts no-check
+    // vite.config.ts
+    import { speechSdk } from "@kucukkanat/speech-core/vite";
+    import react from "@vitejs/plugin-react";
+    import { defineConfig } from "vite";
+
+    export default defineConfig({
+      plugins: [react(), speechSdk({ isolation: true })],
+    });
+    ```
+  </Step>
+  <Step title="Speak">
+    ```ts
+    import { createTTS } from "@kucukkanat/tts";
+
+    const tts = createTTS();
+
+    // Call from a click handler the first time: browsers only allow audio after a user gesture.
+    document.querySelector("button")?.addEventListener("click", async () => {
+      await tts.speak("Hello! This voice is generated entirely inside your browser.");
+    });
+    ```
+  </Step>
+  <Step title="Listen">
+    ```ts
+    import { createSTT } from "@kucukkanat/stt";
+
+    const stt = createSTT();
+    const session = stt.listen(); // loads the model on first use, then opens the microphone
+    session.on("update", ({ committed, partial }) => console.log(committed, partial));
+    setTimeout(() => session.stop(), 10_000);
+    console.log("Final:", (await session).text);
+    ```
+  </Step>
+</Steps>
+
+## Browser requirements
+
+| | Needs |
+|---|---|
+| Text-to-speech | **WebGPU** (recent Chrome/Edge, Safari 26+). Without it, `load()` rejects with `webgpu-required`. |
+| Speech-to-text | WebGPU or WASM with Moonshine; WebGPU with Voxtral Realtime. |
+| Microphone | A secure context: HTTPS or `localhost`. |
+| Cross-origin isolation | Optional. Makes the WASM fallback multi-threaded. |
+
+Check up front instead of waiting for an error:
+
+```ts
+import { detectCapabilities } from "@kucukkanat/speech-core";
+
+const caps = await detectCapabilities(); // never throws; everything is false during SSR
+if (!caps.webgpu) console.warn("No WebGPU: text-to-speech won't run here.");
+if (!caps.secureContext) console.warn("The microphone needs HTTPS or localhost.");
+```
+
+:::tip
+Models download from Hugging Face on first use (Chatterbox Turbo ~725 MB, Moonshine ~158 MB) and are cached by the
+browser, so later visits start in seconds — even offline. See [Hosting](/guides/hosting) to serve them yourself.
+:::
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Text-to-speech" href="/packages/tts" icon="audio-lines">Voices, streaming, karaoke, clips.</Card>
+  <Card title="Speech-to-text" href="/packages/stt" icon="mic">Microphone, files and custom streams.</Card>
+  <Card title="React" href="/packages/react" icon="atom">Hooks for every engine.</Card>
+  <Card title="Playground" href="/playground" icon="play">Try everything in the browser.</Card>
+</CardGroup>

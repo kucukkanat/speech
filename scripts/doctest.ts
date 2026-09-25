@@ -1,4 +1,5 @@
-// Typechecks every ```ts / ```tsx example in the package READMEs, so documentation can't drift from the API. Each block
+// Typechecks every ```ts / ```tsx example in the package READMEs and the docs site, so documentation can't drift from the
+// API. Each block
 // must be self-contained (its own imports), i.e. runnable as-is. Mark a block ```ts no-check to skip it (config files,
 // fragments that need a bundler feature such as `?worker` imports).
 import { mkdir, rm } from "node:fs/promises";
@@ -7,9 +8,10 @@ import { $, Glob } from "bun";
 const OUT = ".doctest";
 await rm(OUT, { recursive: true, force: true });
 let count = 0;
-for (const readme of new Glob("packages/*/README.md").scanSync()) {
-  const pkg = readme.split("/")[1] ?? "unknown";
-  const text = await Bun.file(readme).text();
+const docs = ["packages/*/README.md", "apps/docs/docs/**/*.mdx"].flatMap((pattern) => [...new Glob(pattern).scanSync()]);
+for (const doc of docs) {
+  const pkg = doc.replace(/\.mdx?$/, "").replaceAll("/", "_");
+  const text = await Bun.file(doc).text();
   for (const [i, match] of [...text.matchAll(/```(tsx?)([^\n]*)\n([\s\S]*?)```/g)].entries()) {
     const [, lang, info = "", code = ""] = match;
     if (info.includes("no-check")) continue;
@@ -39,7 +41,7 @@ await Bun.write(
 );
 const result = await $`bunx tsc -p ${OUT}/tsconfig.json`.nothrow();
 if (result.exitCode !== 0) {
-  console.error(`README examples failed to typecheck (see ${OUT}/ for the extracted files).`);
+  console.error(`Documentation examples failed to typecheck (see ${OUT}/ for the extracted files).`);
   process.exit(1);
 }
-console.log(`docs ok: ${count} README examples typecheck`);
+console.log(`docs ok: ${count} README and docs-site examples typecheck`);

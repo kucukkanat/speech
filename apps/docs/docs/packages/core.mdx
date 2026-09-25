@@ -1,10 +1,10 @@
-# @kucukkanat/speech-core
+---
+title: "Core"
+description: "Shared foundations of the @kucukkanat speech SDKs. As an app developer you'll mostly use three things from here: the Vite plugin, typed errors, and capability detection. The rest (typed worker RPC, engine lifecycle) is for building engines of your own."
+icon: cpu
+---
 
-Shared foundations of the [`@kucukkanat`](../..) speech SDKs. As an app developer you'll mostly use three things from
-here: the **Vite plugin**, **typed errors**, and **capability detection**. The rest (typed worker RPC, engine
-lifecycle) is for building engines of your own.
-
-**[Documentation](https://kucukkanat.github.io/speech/packages/core) · [Playground](https://kucukkanat.github.io/speech/playground)**
+`@kucukkanat/speech-core` · [source](https://github.com/kucukkanat/speech/tree/main/packages/speech-core)
 
 ```sh
 bun add @kucukkanat/speech-core
@@ -89,7 +89,3 @@ import { createRpcClient } from "@kucukkanat/speech-core";
 const rpc = createRpcClient<EchoProtocol>(() => new Worker(new URL("./echo.worker.js", import.meta.url), { type: "module" }));
 const loud = await rpc.call("shout", "hello", { onEvent: (n) => console.log(n) }); // 3, 2, 1, then "HELLO"
 ```
-
-## License
-
-MIT

@@ -1,9 +1,10 @@
-# @kucukkanat/tts
+---
+title: "Text-to-speech"
+description: "On-device, voice-cloning text-to-speech for the browser. Runs Chatterbox on WebGPU in a Web Worker: no server, no API key, nothing leaves the device."
+icon: audio-lines
+---
 
-On-device, voice-cloning **text-to-speech for the browser**. Runs [Chatterbox](https://huggingface.co/ResembleAI/chatterbox-turbo-ONNX)
-on WebGPU in a Web Worker: no server, no API key, nothing leaves the device.
-
-**[Documentation](https://kucukkanat.github.io/speech/packages/tts) · [Playground](https://kucukkanat.github.io/speech/playground)**
+`@kucukkanat/tts` · [source](https://github.com/kucukkanat/speech/tree/main/packages/tts)
 
 - **One line to speak**: `await tts.speak("Hello!")` — the model downloads on first use and is cached.
 - **Clone any voice** from a 5–15 s recording: a URL, a `File`, a microphone recording, raw PCM.
@@ -31,6 +32,8 @@ document.querySelector("button")?.addEventListener("click", async () => {
 With no `voice`, the model's reference speaker is used. The first call downloads the model (~725 MB for Turbo) and
 caches it in the browser; later page loads start in seconds, offline.
 
+<TrySpeak />
+
 ## Clone a voice
 
 `voice` accepts anything that holds a recording of the speaker:
@@ -55,7 +58,7 @@ await tts.speak("From raw samples.", { voice: { pcm, sampleRate: 24_000 } });
 
 Learning a voice ("encoding") takes about a second the first time and is cached, so later calls with the same voice
 start immediately. To keep voices across reloads, pass a persistent cache — or use
-[`@kucukkanat/voices`](../voices), a ready-made voice library:
+[`@kucukkanat/voices`](/packages/voices), a ready-made voice library:
 
 ```ts
 import { createTTS } from "@kucukkanat/tts";
@@ -152,7 +155,7 @@ await tts.speak("Hello.", tts.model.supports.exaggeration ? { exaggeration: inte
 
 Every method loads the model on first use. To show progress up front, load explicitly and subscribe to `status` (a
 stable snapshot, so it plugs straight into React's `useSyncExternalStore` — or use
-[`@kucukkanat/speech-react`](../speech-react)):
+[`@kucukkanat/speech-react`](/packages/react)):
 
 ```ts
 import { createTTS } from "@kucukkanat/tts";
@@ -223,8 +226,3 @@ const tts = createTTS({ worker: () => new TtsWorker() });
   which would block model downloads from Hugging Face).
 - **Self-hosting / strict CSP / offline**: models come from Hugging Face and ONNX Runtime's WASM files from jsDelivr
   by default. Point them elsewhere with `createTTS({ transformers: { remoteHost, wasmPaths } })`.
-
-## License
-
-MIT. Model weights: [Chatterbox Turbo](https://huggingface.co/ResembleAI/chatterbox-turbo-ONNX) (MIT) and
-[Chatterbox](https://huggingface.co/onnx-community/chatterbox-ONNX) (MIT), by Resemble AI.

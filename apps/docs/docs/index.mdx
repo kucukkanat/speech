@@ -1,0 +1,56 @@
+---
+title: Introduction
+description: On-device text-to-speech with voice cloning and streaming speech-to-text for the browser. Models run on WebGPU in Web Workers — no server, no API keys, nothing leaves the device.
+icon: house
+---
+
+```ts
+import { createSTT } from "@kucukkanat/stt";
+import { createTTS } from "@kucukkanat/tts";
+
+const tts = createTTS();
+await tts.speak("Hello! I'm running entirely in your browser."); // from a click handler
+
+const stt = createSTT();
+const session = stt.listen();
+session.on("update", ({ text }) => console.log(text));
+```
+
+Try it right here — the model downloads once (about 725 MB) and is cached by your browser:
+
+<TrySpeak />
+
+## Packages
+
+<CardGroup cols={2}>
+  <Card title="@kucukkanat/tts" href="/packages/tts" icon="audio-lines">
+    Voice-cloning text-to-speech (Chatterbox Turbo / Chatterbox): streaming playback, karaoke timing, clips.
+  </Card>
+  <Card title="@kucukkanat/stt" href="/packages/stt" icon="mic">
+    Streaming speech-to-text (Moonshine / Voxtral Realtime): microphone, files, any audio stream.
+  </Card>
+  <Card title="@kucukkanat/voices" href="/packages/voices" icon="users">
+    A persistent voice library (IndexedDB) with demo voices and clip preparation.
+  </Card>
+  <Card title="@kucukkanat/speech-react" href="/packages/react" icon="atom">
+    React hooks: useSpeak, useTranscription, useVoices, useEngine and more.
+  </Card>
+  <Card title="@kucukkanat/speech-audio" href="/packages/audio" icon="audio-waveform">
+    Microphone frames, gapless player, recorder, WAV decoding and resampling.
+  </Card>
+  <Card title="@kucukkanat/speech-core" href="/packages/core" icon="cpu">
+    The Vite plugin, typed errors, capability detection and worker RPC.
+  </Card>
+</CardGroup>
+
+## Why on-device
+
+- **Private**: audio and text never leave the browser.
+- **Free to run**: no inference servers, no API keys, no per-minute pricing.
+- **Offline after the first load**: models are cached by the browser.
+- **Developer-first**: one-line happy paths, `AbortSignal` everywhere, typed errors with stable codes, and per-model
+  options checked at compile time.
+
+<Card title="Open the playground" href="/playground" icon="play">
+  Clone a voice, speak with karaoke highlighting, and dictate live — every feature of the SDKs in one page.
+</Card>
