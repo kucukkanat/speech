@@ -29,5 +29,3 @@ jobs:
           key: pw-profiles-${{ hashFiles('packages/tts/src/models.ts', 'packages/stt/src/models.ts', 'packages/*/src/*.worker.ts') }}
       - run: bun run test:e2e
       - run: bun run test:e2e:docs # the built docs site and its playground, served under /speech/ like GitHub Pages
-      - name: Model integration tests (Node/Bun, CPU)
-        run: bun run test:models

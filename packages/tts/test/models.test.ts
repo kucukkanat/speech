@@ -4,7 +4,9 @@ import { expect, test } from "bun:test";
 import { encodeWav, rms } from "@kucukkanat/speech-audio";
 import { createTTS } from "../src/index.js";
 
-const run = process.env.RUN_MODEL_TESTS === "1";
+// Skipped under Bun: onnxruntime-node (transformers.js' CPU backend) crashes Bun's N-API layer ("NAPI FATAL ERROR"),
+// so these need Node. The same models are exercised in real browsers by the Playwright suites.
+const run = process.env.RUN_MODEL_TESTS === "1" && !process.versions.bun;
 // Bun can't map the published "./tts.worker.js" URL to the TypeScript source, so point at it directly.
 const worker = () => new Worker(new URL("../src/tts.worker.ts", import.meta.url), { type: "module" });
 

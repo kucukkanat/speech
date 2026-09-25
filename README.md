@@ -45,7 +45,7 @@ so edits to `packages/*` hot-reload in the app with no build step.
 | Command | |
 |---|---|
 | `bun run test` | Unit + integration tests for every package (100% coverage threshold, no mocks) |
-| `bun run test:models` | Opt-in: real models on CPU (downloads ~0.8 GB once) |
+| `bun run test:models` | Opt-in: real models on CPU (downloads ~0.8 GB once). Skipped under Bun, whose N-API layer crashes in onnxruntime-node; the Playwright suites cover the models in browsers |
 | `bun run test:e2e` | Playwright against Voice Lab with real models and a fake microphone |
 | `bun run test:e2e:docs` | Playwright against the built docs site and its playground, served under `/speech/` |
 | `bun run test:consumers` | Packs the packages and checks them in a fresh app built with Vite (dev + build), esbuild, Bun.build and Bun's dev server |

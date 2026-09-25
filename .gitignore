@@ -12,3 +12,5 @@ fixtures/*/bun.lock
 fixtures/*/dist
 .blume
 fixtures/*/dist-*
+# The bundler plugin's test fixtures imitate built packages (the plugin only rewrites */dist/index.js)
+!packages/speech-core/test/fixtures/bundler/*/dist/
