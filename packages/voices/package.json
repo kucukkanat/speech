@@ -1,6 +1,6 @@
 {
   "name": "@kucukkanat/voices",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A persistent voice library for @kucukkanat/tts: IndexedDB storage, bundled demo voices, clip preparation and a persistent conditioning cache.",
   "license": "MIT",
   "type": "module",

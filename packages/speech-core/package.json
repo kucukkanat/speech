@@ -1,6 +1,6 @@
 {
   "name": "@kucukkanat/speech-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shared plumbing for the @kucukkanat speech SDKs: typed worker RPC, engine status, typed errors, capability detection and bundler plugins for Vite, esbuild and Bun.",
   "license": "MIT",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@kucukkanat/speech-react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React hooks for the @kucukkanat speech SDKs: model status, speaking with karaoke timing, live transcription, voice libraries.",
   "license": "MIT",
   "type": "module",

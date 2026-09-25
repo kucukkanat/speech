@@ -67,14 +67,14 @@
     },
     "packages/speech-audio": {
       "name": "@kucukkanat/speech-audio",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@kucukkanat/speech-core": "workspace:^",
       },
     },
     "packages/speech-core": {
       "name": "@kucukkanat/speech-core",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "nanoevents": "^9.1.0",
       },
@@ -90,7 +90,7 @@
     },
     "packages/speech-react": {
       "name": "@kucukkanat/speech-react",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@kucukkanat/speech-audio": "workspace:^",
         "@kucukkanat/speech-core": "workspace:^",
@@ -118,7 +118,7 @@
     },
     "packages/stt": {
       "name": "@kucukkanat/stt",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@huggingface/transformers": "4.3.0",
         "@kucukkanat/speech-audio": "workspace:^",
@@ -127,7 +127,7 @@
     },
     "packages/tts": {
       "name": "@kucukkanat/tts",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@huggingface/transformers": "4.3.0",
         "@kucukkanat/speech-audio": "workspace:^",
@@ -136,7 +136,7 @@
     },
     "packages/voices": {
       "name": "@kucukkanat/voices",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@kucukkanat/speech-audio": "workspace:^",
         "@kucukkanat/speech-core": "workspace:^",
