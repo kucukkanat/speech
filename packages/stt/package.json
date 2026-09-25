@@ -1,6 +1,6 @@
 {
   "name": "@kucukkanat/stt",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "On-device, streaming speech-to-text for the browser (Moonshine, Voxtral Realtime on WebGPU/WASM): live microphone transcription, files, typed errors.",
   "license": "MIT",
   "type": "module",

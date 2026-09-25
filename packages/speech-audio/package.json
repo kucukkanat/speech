@@ -1,6 +1,6 @@
 {
   "name": "@kucukkanat/speech-audio",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Browser audio for the @kucukkanat speech SDKs: gapless streaming player, microphone frames as an async iterable, clip recorder, WAV and resampling.",
   "license": "MIT",
   "type": "module",
