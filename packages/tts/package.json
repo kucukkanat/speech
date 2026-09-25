@@ -1,7 +1,7 @@
 {
   "name": "@kucukkanat/tts",
   "version": "0.0.0",
-  "description": "On-device, voice-cloning text-to-speech for the browser (Chatterbox on WebGPU/WASM): streaming playback, karaoke timing, typed errors.",
+  "description": "On-device, voice-cloning text-to-speech for the browser (Chatterbox on WebGPU): streaming playback, karaoke timing, tunable sampling, typed errors.",
   "license": "MIT",
   "type": "module",
   "exports": {

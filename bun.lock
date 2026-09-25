@@ -12,6 +12,7 @@
         "@playwright/test": "^1.63.0",
         "@types/bun": "^1.4.2",
         "@webgpu/types": "^0.1.74",
+        "esbuild": "^0.28.2",
         "fake-indexeddb": "^6.2.5",
         "happy-dom": "^20.14.5",
         "publint": "^0.3.24",

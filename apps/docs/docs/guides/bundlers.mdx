@@ -1,0 +1,132 @@
+---
+title: Bundlers
+description: Set up Vite, esbuild, Bun, webpack or Next.js so the engines' Web Workers and demo voices ship with your app.
+icon: package
+---
+
+The engines run their models in Web Workers that ship inside the packages, created with
+`new Worker(new URL("./tts.worker.js", import.meta.url), { type: "module" })`, and the voice library references its
+demo voices the same way. Every setup below makes those files part of your build. Each one is tested in CI by building
+the same app and running it in a real browser.
+
+| Bundler | Setup |
+|---|---|
+| Vite | `speechSdk()` from `@kucukkanat/speech-core/vite` |
+| esbuild | `speechSdk()` from `@kucukkanat/speech-core/esbuild` |
+| Bun (`Bun.build`) | `speechSdk()` from `@kucukkanat/speech-core/bun` |
+| webpack 5, Rspack, Next.js | Nothing: they bundle `new Worker(new URL(…))` natively |
+
+<Tabs>
+  <Tab title="Vite">
+
+```ts no-check
+// vite.config.ts
+import { speechSdk } from "@kucukkanat/speech-core/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [react(), speechSdk({ isolation: true })],
+});
+```
+
+Keeps the SDKs out of Vite's dependency pre-bundling (where the workers would be lost) and emits ES-module workers.
+`isolation: true` serves dev and preview cross-origin isolated, which makes the WASM fallback multi-threaded.
+
+  </Tab>
+  <Tab title="esbuild">
+
+```ts
+// build.ts
+import { speechSdk } from "@kucukkanat/speech-core/esbuild";
+import * as esbuild from "esbuild";
+
+await esbuild.build({
+  entryPoints: ["src/main.ts"],
+  bundle: true,
+  format: "esm", // the engines use import.meta.url
+  outdir: "dist",
+  minify: true,
+  plugins: [speechSdk()],
+});
+```
+
+```txt
+dist/
+  main.js
+  tts.worker-J4I4ZPEH.js   the TTS engine with transformers.js
+  stt.worker-P5F63VDU.js   the STT engine with transformers.js
+  female-ILRI6KYZ.wav      demo voices (only if you use @kucukkanat/voices)
+  male-SL7Z5MVV.wav
+```
+
+  </Tab>
+  <Tab title="Bun">
+
+```ts
+// build.ts (run with `bun build.ts`)
+import { speechSdk } from "@kucukkanat/speech-core/bun";
+
+const result = await Bun.build({
+  entrypoints: ["src/main.ts"],
+  outdir: "dist",
+  target: "browser",
+  minify: true,
+  plugins: [speechSdk()],
+});
+if (!result.success) throw new AggregateError(result.logs, "Build failed");
+```
+
+`bun build` on the command line has no way to pass plugins, so use `Bun.build()` from a script. For Bun's HTML
+bundler (`bun ./index.html` or `Bun.serve` with HTML imports), register the same plugin in `bunfig.toml`:
+
+```toml
+[serve.static]
+plugins = ["./speech-plugin.ts"]
+```
+
+```ts
+// speech-plugin.ts
+import { speechSdk } from "@kucukkanat/speech-core/bun";
+
+export default speechSdk();
+```
+
+  </Tab>
+  <Tab title="webpack / Next.js">
+
+No configuration: webpack 5 (and Next.js, Rspack) bundle `new Worker(new URL(…, import.meta.url))` and asset URLs out
+of the box. In Next.js, create the engines in client components only (`"use client"`), since they need browser APIs.
+
+  </Tab>
+</Tabs>
+
+## What the esbuild and Bun plugin does
+
+Neither esbuild nor Bun follows `new URL("./x", import.meta.url)` inside dependencies. Without the plugin the bundle
+still builds, but the browser requests `tts.worker.js` and the demo voices next to your bundle and gets 404s, which the
+engines report as `worker-crashed`.
+
+`speechSdk()` finds those URLs in the SDK packages, bundles each worker into its own file (a worker is a separate
+program, so it gets its own copy of transformers.js), copies the audio files, and points the URLs at the emitted,
+content-hashed files. Keep the bundle at the root of `outdir` (the default), or set `publicPath` if you serve assets
+from elsewhere.
+
+## Any other bundler
+
+Bundle the worker entries yourself and hand the engines a factory:
+
+```ts no-check
+import SttWorker from "@kucukkanat/stt/worker?worker"; // your bundler's worker import syntax
+import TtsWorker from "@kucukkanat/tts/worker?worker";
+
+const tts = createTTS({ worker: () => new TtsWorker() });
+const stt = createSTT({ worker: () => new SttWorker() });
+```
+
+For the demo voices, pass your own `demos` (URLs your bundler emits) to `createVoiceStore()`, or `demoVoices: false`.
+
+## Models and ONNX Runtime
+
+The bundles contain code only. Models download from Hugging Face at runtime and ONNX Runtime's WebAssembly loads from
+jsDelivr, both cached by the browser. To serve them yourself, see [Hosting](/guides/hosting#self-hosting-models).

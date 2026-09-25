@@ -2,13 +2,14 @@ import { useTranscription } from "@kucukkanat/speech-react";
 import { isSttModelKey, STT_MODELS, type SttModelKey } from "@kucukkanat/stt";
 import { useRef, useState } from "react";
 import { formatSize } from "./format";
-import { stt } from "./speech";
-import { Button, ErrorNote, Label, ModelGate } from "./ui";
+import { stt, sttDevice } from "./speech";
+import { Button, ErrorNote, Label, ModelGate, Slider } from "./ui";
 
 /** Live microphone dictation. `advanced` adds the model picker and transcribing an audio file. */
 export function TranscribePanel({ advanced = false }: { advanced?: boolean }) {
   const [model, setModel] = useState<SttModelKey>(stt.model.key);
   const [failure, setFailure] = useState<unknown>(null);
+  const [stopTimeoutMs, setStopTimeoutMs] = useState(15_000);
   const choose = (key: SttModelKey) => {
     setModel(key);
     setFailure(null);
@@ -34,16 +35,48 @@ export function TranscribePanel({ advanced = false }: { advanced?: boolean }) {
           <span className="text-xs text-muted-foreground">{STT_MODELS[model].description}</span>
         </label>
       )}
+      {advanced && (
+        <div className="flex flex-wrap items-end gap-4">
+          <label className="flex flex-col gap-1">
+            <Label>Device</Label>
+            <select
+              data-testid="stt-device"
+              className="rounded-blume border border-border bg-background px-2 py-1.5 text-sm"
+              value={sttDevice}
+              // The device is fixed when an engine is created, so switching reloads the page with ?stt-device=…
+              onChange={(e) => {
+                const url = new URL(location.href);
+                url.searchParams.set("stt-device", e.target.value);
+                location.assign(url);
+              }}
+            >
+              <option value="auto">Auto (WebGPU when available)</option>
+              <option value="webgpu">WebGPU</option>
+              <option value="wasm">WASM (CPU)</option>
+            </select>
+          </label>
+          <Slider
+            testId="stt-stop-timeout"
+            label="Stop timeout (s)"
+            value={stopTimeoutMs / 1000}
+            min={1}
+            max={30}
+            step={1}
+            onChange={(s) => setStopTimeoutMs(s * 1000)}
+          />
+        </div>
+      )}
       <ErrorNote error={failure} />
       <ModelGate engine={stt} model={STT_MODELS[model]}>
-        <Dictation />
+        <Dictation stopTimeoutMs={stopTimeoutMs} />
         {advanced && <FileTranscription />}
       </ModelGate>
     </div>
   );
 }
 
-function Dictation() {
+/** `stopTimeoutMs`: how long stop() waits for the last words before returning what it has. */
+function Dictation({ stopTimeoutMs }: { stopTimeoutMs: number }) {
   const level = useRef<HTMLDivElement>(null);
   const { start, stop, clear, listening, starting, committed, partial, error } = useTranscription(stt, {
     onLevel: (l) => level.current?.style.setProperty("transform", `scaleX(${Math.min(1, l * 4)})`),
@@ -57,7 +90,7 @@ function Dictation() {
           data-testid="mic-button"
           data-state={listening ? "listening" : starting ? "starting" : "idle"}
           disabled={starting}
-          onClick={() => (listening ? stop().catch(setStopFailure) : start())}
+          onClick={() => (listening ? stop().catch(setStopFailure) : start({ stopTimeoutMs }))}
         >
           {listening ? "Stop" : starting ? "Starting…" : "Start dictation"}
         </Button>

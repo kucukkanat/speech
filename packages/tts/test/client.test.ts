@@ -1,6 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import { isSpeechError } from "@kucukkanat/speech-core";
-import { createMemoryCache, createTTS, EXAGGERATION, isTtsModelKey, TTS_MODELS, type TtsModelKey, voiceId } from "../src/index.js";
+import {
+  createMemoryCache,
+  createTTS,
+  EXAGGERATION,
+  isTtsModelKey,
+  SAMPLING_RANGES,
+  TTS_MODELS,
+  type TtsModelKey,
+  validateSampling,
+  voiceId,
+} from "../src/index.js";
 import { CONDITIONING_VERSION, conditioningKey, voiceAudio } from "../src/voice.js";
 
 // These tests exercise everything that doesn't need a downloaded model: option typing, validation and typed errors
@@ -38,6 +48,14 @@ describe("createTTS", () => {
     const original = createTTS({ model: "chatterbox" });
     expect(await code(original.synthesize("Hi.", { exaggeration: EXAGGERATION.max + 1 }))).toBe("unsupported-option");
     original.dispose();
+  });
+
+  test("validates sampling before touching the model", async () => {
+    const tts = createTTS();
+    expect(await code(tts.synthesize("Hi.", { sampling: { temperature: 0 } }))).toBe("unsupported-option");
+    expect(await code(tts.synthesize("Hi.", { sampling: { topK: 2.5 } }))).toBe("unsupported-option");
+    expect(tts.status.state).toBe("idle");
+    tts.dispose();
   });
 
   test("switchModel changes the selected model and its capabilities", async () => {
@@ -87,6 +105,28 @@ describe("models", () => {
 
   test("every model's key matches its entry", () => {
     for (const [key, info] of Object.entries(TTS_MODELS)) expect(info.key).toBe(key as TtsModelKey);
+  });
+});
+
+describe("sampling", () => {
+  test("every model's defaults are within the accepted ranges", () => {
+    for (const model of Object.values(TTS_MODELS)) expect(() => validateSampling(model.sampling)).not.toThrow();
+  });
+
+  test("accepts partial overrides at the edges of each range", () => {
+    for (const [name, { min, max }] of Object.entries(SAMPLING_RANGES)) {
+      expect(() => validateSampling({ [name]: min })).not.toThrow();
+      expect(() => validateSampling({ [name]: max })).not.toThrow();
+    }
+    expect(() => validateSampling({})).not.toThrow();
+  });
+
+  test("rejects out-of-range, fractional topK, non-numeric and unknown options with a helpful message", () => {
+    expect(() => validateSampling({ temperature: 2.5 })).toThrow("`sampling.temperature` must be a number between 0.05 and 2 (got 2.5).");
+    expect(() => validateSampling({ topK: 10.5 })).toThrow("`sampling.topK` must be a whole number between 0 and 8192 (got 10.5).");
+    expect(() => validateSampling({ topP: Number.NaN })).toThrow("`sampling.topP`");
+    expect(() => validateSampling({ minP: "0.1" } as unknown as { minP: number })).toThrow("`sampling.minP`");
+    expect(() => validateSampling({ beam: 2 } as unknown as { topP: number })).toThrow("Unknown sampling option `beam`.");
   });
 });
 

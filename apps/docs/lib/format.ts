@@ -1,4 +1,4 @@
-import type { LoadProgress } from "@kucukkanat/speech-core";
+import type { Device, LoadProgress } from "@kucukkanat/speech-core";
 
 /** "725 MB", "1.5 GB" */
 export const formatSize = (mb: number): string => (mb >= 1000 ? `${(mb / 1000).toFixed(1)} GB` : `${Math.round(mb)} MB`);
@@ -9,3 +9,6 @@ export const formatProgress = (progress: LoadProgress | null): string =>
 
 /** A user-presentable message for anything a demo can throw (SDK failures are SpeechErrors with friendly messages). */
 export const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
+/** A device from a URL parameter; anything else means "auto". */
+export const parseDevice = (value: string | null): Device | "auto" => (value === "webgpu" || value === "wasm" ? value : "auto");

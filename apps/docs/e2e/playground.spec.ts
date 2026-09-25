@@ -1,4 +1,4 @@
-import { expect, test } from "./fixtures";
+import { expect, FAKE_MIC_WAV, test } from "./fixtures";
 
 test("the playground speaks with a demo voice, sentence by sentence", async ({ page }) => {
   await page.goto("playground");
@@ -52,4 +52,59 @@ test("an inline demo on the TTS page shares the loaded engine and speaks", async
   await speak.click({ timeout: 5 * 60_000 });
   await expect(speak).toHaveAttribute("data-state", "ended", { timeout: 5 * 60_000 });
   await expect(demo.getByTestId("karaoke-sentence").first()).toBeVisible();
+});
+
+test("sampling parameters are adjustable, reset to the model's defaults, and reach the engine", async ({ page }) => {
+  await page.goto("playground");
+  const playground = page.getByTestId("playground");
+  await playground.getByTestId("model-load").first().click();
+  const temperature = playground.getByTestId("tts-sampling-temperature");
+  await expect(temperature).toBeVisible({ timeout: 5 * 60_000 });
+  await expect(playground.getByTestId("tts-sampling-temperature-value")).toHaveText("0.80");
+
+  await temperature.fill("0.5");
+  await playground.getByTestId("tts-sampling-repetitionPenalty").fill("1.5");
+  await playground.getByTestId("tts-buffering").uncheck();
+  await expect(playground.getByTestId("tts-sampling-temperature-value")).toHaveText("0.50");
+
+  const speak = playground.getByTestId("speak-button");
+  await playground.getByTestId("tts-text").fill("A calm, steady and deliberate voice reads this sentence aloud.");
+  await speak.click();
+  await expect(speak).toHaveAttribute("data-state", "ended", { timeout: 5 * 60_000 });
+  await expect(playground.getByTestId("karaoke-sentence")).toHaveCount(1);
+  await expect(playground.getByTestId("demo-error")).toHaveCount(0);
+
+  await playground.getByTestId("tts-sampling-reset").click();
+  await expect(playground.getByTestId("tts-sampling-temperature-value")).toHaveText("0.80");
+  await expect(playground.getByTestId("tts-sampling-repetitionPenalty-value")).toHaveText("1.20");
+});
+
+test("speech-to-text runs on the WASM backend when chosen", async ({ page }) => {
+  await page.goto("playground?stt-device=wasm");
+  const playground = page.getByTestId("playground");
+  await playground.getByTestId("tab-transcribe").click();
+  const panel = playground.getByRole("tabpanel").filter({ has: page.getByTestId("stt-model") });
+  await expect(panel.getByTestId("stt-device")).toHaveValue("wasm");
+  await panel.getByTestId("model-load").click();
+  await panel.getByTestId("stt-file").setInputFiles(FAKE_MIC_WAV, { timeout: 10 * 60_000 }); // first run downloads Moonshine for WASM
+  await expect(panel.getByTestId("file-transcript")).toContainText(/hour|father|tutor|university/i, { timeout: 2 * 60_000 });
+});
+
+test("voices can be added with manual cropping, removed and restored", async ({ page }) => {
+  await page.goto("playground");
+  await page.getByTestId("tab-voices").click();
+  const playground = page.getByTestId("playground");
+  const name = `Upload ${Date.now()}`;
+  await playground.getByTestId("voice-name").fill(name);
+  await playground.getByTestId("voice-crop").selectOption("none");
+  await playground.getByTestId("voice-max-seconds").fill("5");
+  await playground.getByTestId("voice-file").setInputFiles(FAKE_MIC_WAV);
+  const item = playground.getByTestId("voice-item").filter({ hasText: name });
+  await expect(item).toContainText("· 5.0 s"); // the 7 s file, cut at max length instead of auto-cropped
+
+  await item.getByTestId("voice-remove").click();
+  await expect(item).toHaveCount(0);
+  await playground.getByTestId("voice-undo").click();
+  await expect(item).toHaveCount(1);
+  await item.getByTestId("voice-remove").click(); // leave the shared profile as it was
 });

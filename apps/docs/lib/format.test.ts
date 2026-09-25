@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { SpeechError } from "@kucukkanat/speech-core";
-import { errorMessage, formatProgress, formatSize } from "./format";
+import { errorMessage, formatProgress, formatSize, parseDevice } from "./format";
 
 describe("formatSize", () => {
   test("megabytes below a gigabyte, one decimal above", () => {
@@ -26,5 +26,14 @@ describe("errorMessage", () => {
   });
   test("anything else is stringified", () => {
     expect(errorMessage("nope")).toBe("nope");
+  });
+});
+
+describe("parseDevice", () => {
+  test("accepts the two backends, anything else is auto", () => {
+    expect(parseDevice("wasm")).toBe("wasm");
+    expect(parseDevice("webgpu")).toBe("webgpu");
+    expect(parseDevice("cuda")).toBe("auto");
+    expect(parseDevice(null)).toBe("auto");
   });
 });

@@ -38,6 +38,40 @@ export const Label = ({ children }: { children: ReactNode }) => (
   <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{children}</span>
 );
 
+interface SliderProps {
+  testId: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+}
+
+/** A labelled range input that shows its current value. */
+export function Slider({ testId, label, value, min, max, step, onChange }: SliderProps) {
+  return (
+    <label className="flex min-w-48 flex-col gap-1">
+      <span className="flex justify-between gap-2">
+        <Label>{label}</Label>
+        <span className="font-mono text-xs" data-testid={`${testId}-value`}>
+          {Number.isInteger(step) ? value : value.toFixed(2)}
+        </span>
+      </span>
+      <input
+        data-testid={testId}
+        className="accent-accent"
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+    </label>
+  );
+}
+
 interface GateProps {
   engine: EngineLike<string>;
   /** The model the demo will run (it may not be loaded yet). */

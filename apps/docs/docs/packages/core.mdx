@@ -1,6 +1,6 @@
 ---
 title: "Core"
-description: "Shared foundations of the @kucukkanat speech SDKs. As an app developer you'll mostly use three things from here: the Vite plugin, typed errors, and capability detection. The rest (typed worker RPC, engine lifecycle) is for building engines of your own."
+description: "Shared foundations of the @kucukkanat speech SDKs. As an app developer you'll mostly use three things from here: the bundler plugins (Vite, esbuild, Bun), typed errors, and capability detection. The rest (typed worker RPC, engine lifecycle) is for building engines of your own."
 icon: cpu
 ---
 
@@ -26,6 +26,37 @@ export default defineConfig({
 It keeps `@kucukkanat/tts`, `@kucukkanat/stt`, `@kucukkanat/speech-audio` and transformers.js out of dependency
 pre-bundling (so their Web Workers stay detectable), emits ES-module workers, and — with `isolation: true` — serves dev
 and preview cross-origin isolated (`COOP: same-origin`, `COEP: credentialless`), which enables multi-threaded WASM.
+
+## esbuild and Bun plugin
+
+esbuild and Bun.build share a plugin API, so one plugin serves both (import it from `/esbuild` or `/bun`):
+
+```ts
+// build.ts
+import { speechSdk } from "@kucukkanat/speech-core/esbuild";
+import * as esbuild from "esbuild";
+
+await esbuild.build({
+  entryPoints: ["src/main.ts"],
+  bundle: true,
+  format: "esm", // the engines use import.meta.url
+  outdir: "dist",
+  plugins: [speechSdk()],
+});
+```
+
+```ts
+// build.ts (run with `bun build.ts`)
+import { speechSdk } from "@kucukkanat/speech-core/bun";
+
+const result = await Bun.build({ entrypoints: ["src/main.ts"], outdir: "dist", target: "browser", plugins: [speechSdk()] });
+if (!result.success) throw new AggregateError(result.logs, "Build failed");
+```
+
+Neither bundler follows `new Worker(new URL("./x.worker.js", import.meta.url))` inside dependencies, so without the
+plugin the engines' workers and the demo voices would 404. The plugin bundles each worker (with transformers.js) into
+its own file and emits the demo voices, next to your bundle with hashed names. Serve the output directory as static
+files; ONNX Runtime's WebAssembly still loads from jsDelivr unless you set `transformers.wasmPaths`.
 
 ## Errors
 

@@ -148,6 +148,37 @@ const intensity = 0.8;
 await tts.speak("Hello.", tts.model.supports.exaggeration ? { exaggeration: intensity } : {});
 ```
 
+## Tune the delivery
+
+Speech is sampled token by token. Each model ships with the reference implementation's settings
+(`tts.model.sampling`); override any of them per call:
+
+```ts
+import { createTTS, SAMPLING_RANGES } from "@kucukkanat/tts";
+
+const tts = createTTS();
+console.log(tts.model.sampling); // { temperature: 0.8, topK: 1000, topP: 0.95, minP: 0, repetitionPenalty: 1.2 }
+
+// Steadier and more predictable, e.g. for narration:
+await tts.speak("Chapter one. The storm had passed.", { sampling: { temperature: 0.5, repetitionPenalty: 1.4 } });
+
+// Livelier, with more variation between takes:
+await tts.speak("Wait, you did what?", { sampling: { temperature: 1.1, topP: 1 } });
+
+console.log(SAMPLING_RANGES.temperature); // { min: 0.05, max: 2 }
+```
+
+| Option | Effect | Range |
+|---|---|---|
+| `temperature` | Randomness: lower is steadier and flatter, higher is livelier but may slur or ramble | 0.05–2 |
+| `topK` | Only the k most likely tokens (0 = no limit) | 0–8192, whole |
+| `topP` | Only the most likely tokens that together reach this probability (1 = off) | 0.05–1 |
+| `minP` | Drop tokens less than `minP` × as likely as the best one (0 = off) | 0–1 |
+| `repetitionPenalty` | Above 1, discourages repeated sounds: fewer stutters and loops (1 = off) | 1–3 |
+
+Out-of-range values reject with `unsupported-option` before anything runs. `sampling` works with `speak()`,
+`stream()` and `synthesize()`, on every model.
+
 ## Loading and status
 
 Every method loads the model on first use. To show progress up front, load explicitly and subscribe to `status` (a
@@ -190,11 +221,10 @@ Codes you may see: `webgpu-required`, `empty-text`, `invalid-voice`, `decode-fai
 ## Bundlers
 
 The model runs in a Web Worker shipped with this package and created with
-`new Worker(new URL("./tts.worker.js", import.meta.url), { type: "module" })`, which Vite, webpack 5, Next.js and
-Rspack bundle automatically.
+`new Worker(new URL("./tts.worker.js", import.meta.url), { type: "module" })`. webpack 5, Next.js and Rspack bundle
+it automatically; Vite, esbuild and Bun take one plugin from `@kucukkanat/speech-core`:
 
-**Vite**: add the plugin from `@kucukkanat/speech-core` (keeps the worker out of dependency pre-bundling, and can serve
-the dev server cross-origin isolated):
+**Vite**: keeps the worker out of dependency pre-bundling (and can serve the dev server cross-origin isolated):
 
 ```ts no-check
 // vite.config.ts
@@ -204,8 +234,25 @@ import { defineConfig } from "vite";
 export default defineConfig({ plugins: [speechSdk({ isolation: true })] });
 ```
 
-**Anything else**: if your bundler can't pick up workers inside dependencies, bundle the worker entry
-(`@kucukkanat/tts/worker`) with its own worker syntax and pass a factory. With Vite's `?worker` import, for example:
+**esbuild** and **Bun**: bundles the worker (with transformers.js) and the demo voices as files next to your bundle:
+
+```ts
+// build.ts
+import { speechSdk } from "@kucukkanat/speech-core/esbuild";
+import * as esbuild from "esbuild";
+
+await esbuild.build({ entryPoints: ["src/main.ts"], bundle: true, format: "esm", outdir: "dist", plugins: [speechSdk()] });
+```
+
+```ts
+// build.ts (run with `bun build.ts`)
+import { speechSdk } from "@kucukkanat/speech-core/bun";
+
+await Bun.build({ entrypoints: ["src/main.ts"], outdir: "dist", target: "browser", plugins: [speechSdk()] });
+```
+
+**Anything else**: bundle the worker entry (`@kucukkanat/tts/worker`) with your bundler's worker syntax and pass a
+factory. With Vite's `?worker` import, for example:
 
 ```ts no-check
 import TtsWorker from "@kucukkanat/tts/worker?worker";

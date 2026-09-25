@@ -1,7 +1,7 @@
 {
   "name": "@kucukkanat/speech-core",
   "version": "0.0.0",
-  "description": "Shared plumbing for the @kucukkanat speech SDKs: typed worker RPC, engine status, typed errors, capability detection and a Vite plugin.",
+  "description": "Shared plumbing for the @kucukkanat speech SDKs: typed worker RPC, engine status, typed errors, capability detection and bundler plugins for Vite, esbuild and Bun.",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -14,6 +14,16 @@
       "@kucukkanat/source": "./src/vite.ts",
       "types": "./dist/vite.d.ts",
       "default": "./dist/vite.js"
+    },
+    "./esbuild": {
+      "@kucukkanat/source": "./src/esbuild.ts",
+      "types": "./dist/esbuild.d.ts",
+      "default": "./dist/esbuild.js"
+    },
+    "./bun": {
+      "@kucukkanat/source": "./src/esbuild.ts",
+      "types": "./dist/esbuild.d.ts",
+      "default": "./dist/esbuild.js"
     },
     "./package.json": "./package.json"
   },

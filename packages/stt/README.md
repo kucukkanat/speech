@@ -136,8 +136,8 @@ Codes you may see: `mic-permission-denied`, `mic-not-found`, `mic-busy`, `mic-un
 
 ## Bundlers and hosting
 
-Same as [`@kucukkanat/tts`](../tts#bundlers): the worker is picked up automatically by Vite (use
-`speechSdk()` from `@kucukkanat/speech-core/vite`), webpack 5 and Next.js; `@kucukkanat/stt/worker` is exported for
+Same as [`@kucukkanat/tts`](../tts#bundlers): webpack 5, Next.js and Rspack pick the worker up automatically; Vite, esbuild and Bun
+take `speechSdk()` from `@kucukkanat/speech-core/vite`, `/esbuild` or `/bun`. `@kucukkanat/stt/worker` is exported for
 custom setups. The microphone needs a secure context (HTTPS or localhost); cross-origin isolation is optional.
 
 ## License

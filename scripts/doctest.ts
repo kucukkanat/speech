@@ -31,6 +31,8 @@ await Bun.write(
       // Bun links workspace packages per dependent, not at the root, so point the SDKs (at their sources) and React
       // (from the React package) explicitly — the way a reader's project would resolve them after installing.
       paths: {
+        "@kucukkanat/speech-core/esbuild": ["../packages/speech-core/src/esbuild.ts"],
+        "@kucukkanat/speech-core/bun": ["../packages/speech-core/src/esbuild.ts"],
         "@kucukkanat/*": ["../packages/*/src/index.ts"],
         react: ["../packages/speech-react/node_modules/@types/react"],
         "react/*": ["../packages/speech-react/node_modules/@types/react/*"],

@@ -1,0 +1,3 @@
+# Plugins for Bun's HTML bundler (serve.ts, `bun ./index.html`).
+[serve.static]
+plugins = ["./speech-plugin.ts"]

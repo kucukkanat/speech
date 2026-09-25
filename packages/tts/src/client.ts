@@ -10,7 +10,16 @@ import {
   SpeechError,
   type TransformersOptions,
 } from "@kucukkanat/speech-core";
-import { EXAGGERATION, isTtsModelKey, type ModelOptionsFor, TTS_MODELS, type TtsModelInfo, type TtsModelKey } from "./models.js";
+import {
+  EXAGGERATION,
+  isTtsModelKey,
+  type ModelOptionsFor,
+  type Sampling,
+  TTS_MODELS,
+  type TtsModelInfo,
+  type TtsModelKey,
+  validateSampling,
+} from "./models.js";
 import { SAMPLE_RATE, type TtsBroadcast, type TtsProtocol } from "./protocol.js";
 import { spawnTtsWorker } from "./spawn.js";
 import { type AudioClip, createClip, type Piece, playPieces, type SentenceInfo, type Speech } from "./speech.browser.js";
@@ -38,6 +47,8 @@ interface CommonOptions {
   voice?: VoiceInput;
   /** Cancels the call: the promise rejects with the signal's reason. */
   signal?: AbortSignal;
+  /** Override any of the model's token sampling (`tts.model.sampling`), e.g. `{ temperature: 0.6 }` for a steadier read. */
+  sampling?: Partial<Sampling>;
 }
 
 export type SpeakOptions<M extends TtsModelKey = TtsModelKey> = CommonOptions &
@@ -109,8 +120,9 @@ export function createTTS<M extends TtsModelKey = "chatterbox-turbo">(options: T
   const load = core.load;
   const encoding = new Map<string, Promise<SpeakerConditioning>>();
 
-  const validate = (text: string, extra: { exaggeration?: number | undefined }) => {
+  const validate = (text: string, extra: { exaggeration?: number | undefined; sampling?: Partial<Sampling> | undefined }) => {
     if (!text.trim()) throw new SpeechError("empty-text", "There's no text to speak.");
+    if (extra.sampling) validateSampling(extra.sampling);
     const { exaggeration } = extra;
     if (exaggeration === undefined) return;
     if (!TTS_MODELS[core.selected].supports.exaggeration) {
@@ -174,7 +186,12 @@ export function createTTS<M extends TtsModelKey = "chatterbox-turbo">(options: T
     const pieces = createChannel<Piece>();
     const call = rpc.call(
       "generate",
-      { text, conditioning: c, ...(opts.exaggeration !== undefined ? { exaggeration: opts.exaggeration } : {}) },
+      {
+        text,
+        conditioning: c,
+        ...(opts.exaggeration !== undefined ? { exaggeration: opts.exaggeration } : {}),
+        ...(opts.sampling ? { sampling: opts.sampling } : {}),
+      },
       { signal: control.signal, onEvent: (p) => pieces.push(p) },
     );
     call.then(

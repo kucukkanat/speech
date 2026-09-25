@@ -10,12 +10,14 @@ interface PackageJson {
 }
 
 const pkg = (await Bun.file("package.json").json()) as PackageJson;
-const sources = Object.values(pkg.exports)
-  .flatMap((e) => (typeof e === "object" && e["@kucukkanat/source"] ? [e["@kucukkanat/source"]] : []))
-  .filter((s) => !s.endsWith(".worker.ts")); // worker subpaths are built with the workers below (they need a worker scope)
+const sources = [
+  ...new Set(
+    Object.values(pkg.exports).flatMap((e) => (typeof e === "object" && e["@kucukkanat/source"] ? [e["@kucukkanat/source"]] : [])),
+  ),
+].filter((s) => !s.endsWith(".worker.ts")); // worker subpaths are built with the workers below (they need a worker scope)
 const workers = [...new Glob("src/*.worker.ts").scanSync()];
-// The Vite plugin entry runs in Node (inside vite.config), everything else in browsers/workers.
-const node = sources.filter((s) => s.endsWith("/vite.ts"));
+// The bundler plugins run in Node or Bun (inside the bundler config), everything else in browsers/workers.
+const node = sources.filter((s) => s.endsWith("/vite.ts") || s.endsWith("/esbuild.ts"));
 const browser = [...sources.filter((s) => !node.includes(s)), ...workers];
 
 await rm("dist", { recursive: true, force: true });

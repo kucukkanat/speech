@@ -32,5 +32,14 @@ test.skipIf(!run)("Chatterbox Turbo speaks a cloned voice", async () => {
   expect(rms(clip.pcm)).toBeGreaterThan(0.01);
   expect(clip.sentences.map((s) => s.index)).toEqual([0, 1]);
   expect(encodeWav(clip.pcm, clip.sampleRate).size).toBe(44 + clip.pcm.length * 2);
+
+  // Sampling overrides reach the worker: near-greedy, heavily penalised decoding still ends in plausible speech.
+  const steady = await tts.synthesize("A calm and steady voice.", {
+    voice: Bun.file(voice),
+    sampling: { temperature: 0.3, topK: 50, topP: 0.9, minP: 0.05, repetitionPenalty: 1.5 },
+  });
+  expect(steady.duration).toBeGreaterThan(0.8);
+  expect(steady.duration).toBeLessThan(6);
+  expect(rms(steady.pcm)).toBeGreaterThan(0.01);
   tts.dispose();
 });

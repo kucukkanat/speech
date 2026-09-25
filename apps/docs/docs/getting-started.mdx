@@ -14,8 +14,8 @@ icon: rocket
     ```
   </Step>
   <Step title="Configure your bundler">
-    The models run in Web Workers that ship inside the packages. Vite needs one plugin to keep them out of dependency
-    pre-bundling (webpack 5, Next.js and Rspack pick them up with no configuration):
+    The models run in Web Workers that ship inside the packages. Vite, esbuild and Bun take one plugin (webpack 5,
+    Next.js and Rspack need none; see [Bundlers](/guides/bundlers) for each setup). With Vite:
 
     ```ts no-check
     // vite.config.ts
@@ -83,5 +83,7 @@ browser, so later visits start in seconds — even offline. See [Hosting](/guide
   <Card title="Text-to-speech" href="/packages/tts" icon="audio-lines">Voices, streaming, karaoke, clips.</Card>
   <Card title="Speech-to-text" href="/packages/stt" icon="mic">Microphone, files and custom streams.</Card>
   <Card title="React" href="/packages/react" icon="atom">Hooks for every engine.</Card>
+  <Card title="Voice cloning" href="/guides/voice-cloning" icon="audio-lines">Record, clone and speak.</Card>
+  <Card title="Bundlers" href="/guides/bundlers" icon="package">Vite, esbuild, Bun, webpack, Next.js.</Card>
   <Card title="Playground" href="/playground" icon="play">Try everything in the browser.</Card>
 </CardGroup>

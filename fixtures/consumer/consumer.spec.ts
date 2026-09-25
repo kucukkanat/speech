@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("the packed SDKs work in a fresh Vite app", async ({ page }) => {
+test(`the packed SDKs work in a fresh app (${process.env.FIXTURE_MODE ?? "build"})`, async ({ page }) => {
   await page.goto("/");
   const results = await page.waitForFunction(() => (window as unknown as { __results?: unknown }).__results, null, { timeout: 120_000 });
   expect(await results.jsonValue()).toEqual({

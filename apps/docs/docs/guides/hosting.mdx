@@ -22,19 +22,7 @@ Static hosts that can't set headers, like GitHub Pages (which serves this site),
 
 ## Bundlers
 
-The engines create their workers with `new Worker(new URL("./tts.worker.js", import.meta.url), { type: "module" })`,
-which Vite, webpack 5, Next.js and Rspack bundle automatically.
-
-- **Vite**: add `speechSdk()` from `@kucukkanat/speech-core/vite`. It keeps the packages out of dependency
-  pre-bundling (where workers would be lost), emits ES-module workers, and with `isolation: true` serves dev and preview
-  cross-origin isolated.
-- **Next.js**: use the engines from client components only (`"use client"`); they need browser APIs.
-- **Anything else**: bundle the worker entry yourself and pass a factory:
-
-```ts no-check
-import TtsWorker from "@kucukkanat/tts/worker?worker";
-const tts = createTTS({ worker: () => new TtsWorker() });
-```
+Vite, esbuild and Bun each take one plugin; webpack 5 and Next.js need none. See [Bundlers](/guides/bundlers).
 
 ## Self-hosting models
 

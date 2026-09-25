@@ -1,6 +1,6 @@
 // Messages between the TextToSpeech client and its worker (see @kucukkanat/speech-core rpc).
 import type { Device, LoadProgress, SpeakerConditioning, TransformersOptions } from "@kucukkanat/speech-core";
-import type { TtsModelKey } from "./models.js";
+import type { Sampling, TtsModelKey } from "./models.js";
 
 export const SAMPLE_RATE = 24000;
 
@@ -20,7 +20,7 @@ export interface TtsProtocol {
   };
   encode: { arg: { pcm: Float32Array; sampleRate: number }; result: SpeakerConditioning; event: never };
   generate: {
-    arg: { text: string; conditioning: SpeakerConditioning; exaggeration?: number };
+    arg: { text: string; conditioning: SpeakerConditioning; exaggeration?: number; sampling?: Partial<Sampling> };
     result: { audioSeconds: number; totalMs: number };
     event: GeneratedPiece;
   };

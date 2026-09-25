@@ -1,0 +1,103 @@
+---
+title: Voice cloning
+description: Clone a voice from a few seconds of audio — recorded, uploaded or raw PCM — and speak any text with it, entirely in the browser.
+icon: audio-lines
+---
+
+Chatterbox clones a voice from a short reference recording: no training, no upload, nothing leaves the device. The
+model "encodes" the recording once (about a second) and then speaks any text in that voice.
+
+Try the whole flow. Record yourself (or upload a clip), then press speak:
+
+<TryCloning />
+
+## The shortest version
+
+Any recording works as a `voice`, used as-is:
+
+```ts
+import { createTTS } from "@kucukkanat/tts";
+
+const tts = createTTS();
+const file = document.querySelector<HTMLInputElement>("input[type=file]")?.files?.[0];
+
+// A File or Blob (wav, mp3, ogg, webm, m4a…), a URL, or { pcm, sampleRate }.
+if (file) await tts.speak("This is my cloned voice.", { voice: file });
+```
+
+That's enough for a one-off. For a voice people keep using, add it to a voice library.
+
+## Record, clone and speak
+
+The full flow: record from the microphone, turn the recording into a clean reference clip, save it, and speak with it.
+
+```ts
+import { startRecording } from "@kucukkanat/speech-audio";
+import { createTTS } from "@kucukkanat/tts";
+import { createVoiceStore } from "@kucukkanat/voices";
+
+const voices = createVoiceStore();
+// Share the library's cache: a saved voice is encoded once, not on every page load.
+const tts = createTTS({ cache: voices.conditioningCache });
+
+// 1. Record: ask the speaker to read a sentence or two naturally.
+const recording = await startRecording({ maxSeconds: 15 });
+recording.on("time", (seconds) => console.log(`recording… ${seconds.toFixed(0)} s`));
+setTimeout(() => recording.stop(), 8_000); // or stop from a button
+const audio = await recording.done;
+
+// 2. Clone: crops the best 5–10 s of speech, trims at zero crossings, normalises, stores it in IndexedDB.
+const me = await voices.create({ name: "Me", audio, meta: {} });
+console.log(`${me.name}: a ${me.seconds.toFixed(1)} s reference clip`);
+
+// 3. Optional: encode it now, so the first speak() starts instantly.
+await tts.prepare(me);
+
+// 4. Speak with it — now, or after a reload: the voice and its encoding are persisted.
+await tts.speak("Hello! This is my voice, cloned a moment ago in the browser.", { voice: me });
+```
+
+`voices.create()` takes the same inputs as `voice`: a `Blob` from a file input, a URL, bytes, or PCM.
+
+## Control the reference clip
+
+By default `create()` keeps the most energetic stretch of up to 10 seconds, which is usually the speech rather than
+the silence around it. Choose the clip yourself when you know better:
+
+```ts
+import { createVoiceStore } from "@kucukkanat/voices";
+
+const voices = createVoiceStore();
+const interview = "/recordings/interview.mp3";
+
+// Keep everything (up to 12 s) instead of auto-cropping:
+await voices.create({ name: "Full take", audio: interview, meta: {}, crop: false, maxSeconds: 12 });
+
+// Or pick the window, e.g. from your own waveform editor (seconds):
+await voices.create({ name: "Host", audio: interview, meta: {}, crop: { start: 42.5, end: 51 } });
+```
+
+To build that editor, `computePeaks()` draws the waveform and `bestWindow()` suggests the default selection. See
+[clip utilities](/packages/voices#clip-utilities).
+
+## Tips for a good clone
+
+- **5–10 seconds of one person speaking** is the sweet spot. Shorter loses character; longer doesn't help.
+- **Quiet room, close microphone.** The model copies everything, including echo, hum and the microphone's tone.
+- **Natural reading,** not a monotone or a shout: the delivery of the reference carries into every sentence.
+- **No music or overlapping voices** in the clip.
+- **Tune the delivery** per call with [`sampling`](/packages/tts#tune-the-delivery), or pick the Chatterbox model
+  for `exaggeration` (emotion intensity). Try both in the [playground](/playground).
+
+:::warning
+Only clone voices you have permission to use. Tell people when speech is generated, and never use a cloned voice to
+impersonate someone.
+:::
+
+## What happens under the hood
+
+1. The recording is decoded and resampled to 24 kHz mono (`decodeAudio`, `resample`).
+2. The speaker encoder turns it into conditioning tensors: the "voice" the model speaks with.
+3. The encoding is cached under the voice's id, the model and the encoding version. `voices.conditioningCache` keeps
+   it in IndexedDB, so each voice is encoded once per model.
+4. Every `speak()` conditions generation on it; switching models encodes once more for the new model.

@@ -11,10 +11,13 @@ export {
   EXAGGERATION,
   isTtsModelKey,
   type ModelOptionsFor,
+  SAMPLING_RANGES,
+  type Sampling,
   TTS_MODELS,
   type TtsModelInfo,
   type TtsModelKey,
   type TtsModelOptions,
+  validateSampling,
 } from "./models.js";
 export type {
   AudioClip,

@@ -6,6 +6,13 @@ icon: play
 
 <Playground />
 
+Every option the SDKs expose is here:
+
+- **Speak**: model, voice, `exaggeration` (Chatterbox), `buffering`, and token `sampling` (temperature, top-k, top-p,
+  min-p, repetition penalty), starting from each model's defaults.
+- **Transcribe**: model, device (WebGPU or WASM) and the stop timeout, from the microphone or a file.
+- **Voices**: record or upload, with automatic or manual cropping and a maximum clip length.
+
 Everything runs on this device: models download from Hugging Face the first time (then come from the browser cache),
 voices you add are stored in this browser's IndexedDB, and no audio or text is sent anywhere.
 

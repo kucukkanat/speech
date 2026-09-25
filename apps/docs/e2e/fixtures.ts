@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { type BrowserContext, test as base, chromium } from "@playwright/test";
 
 /** Played in a loop as the fake microphone; its transcript is documented in packages/voices/assets/CREDITS.md. */
-const FAKE_MIC_WAV = fileURLToPath(new URL("../../../packages/voices/assets/male.wav", import.meta.url));
+export const FAKE_MIC_WAV = fileURLToPath(new URL("../../../packages/voices/assets/male.wav", import.meta.url));
 const PROFILE = fileURLToPath(new URL("../.cache/pw-profile", import.meta.url));
 
 /**

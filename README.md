@@ -48,7 +48,7 @@ so edits to `packages/*` hot-reload in the app with no build step.
 | `bun run test:models` | Opt-in: real models on CPU (downloads ~0.8 GB once) |
 | `bun run test:e2e` | Playwright against Voice Lab with real models and a fake microphone |
 | `bun run test:e2e:docs` | Playwright against the built docs site and its playground, served under `/speech/` |
-| `bun run test:consumers` | Packs the packages and checks them in a fresh Vite app (dev + production build) |
+| `bun run test:consumers` | Packs the packages and checks them in a fresh app built with Vite (dev + build), esbuild, Bun.build and Bun's dev server |
 | `bun run typecheck` · `bun run lint` · `bun run format` | TypeScript (strict), Biome |
 | `bun run build` | Builds every package to `dist/`, then Voice Lab and the docs site |
 | `bun run check:packages` | publint + are-the-types-wrong on every package |
@@ -70,7 +70,7 @@ Versions are managed with [Changesets](https://github.com/changesets/changesets)
 packages/     the SDKs (each with its own README and runnable examples)
 apps/studio   Voice Lab, the demo app (Vite + React + Tailwind)
 apps/docs     the documentation site and playground (Blume), deployed to GitHub Pages on every push to main
-fixtures/     consumer-vite: a fresh app that installs the packed tarballs
+fixtures/     consumer: a fresh app that installs the packed tarballs (built with Vite, esbuild and Bun.build)
 scripts/      build, typecheck, doc-test, consumer test and release tooling
 ```
 

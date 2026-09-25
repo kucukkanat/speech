@@ -36,7 +36,7 @@ import {
 import { filterMinP, filterTopP, isDegenerate, maxNewTokens, penalizeRepeats } from "./internal/decoding.js";
 import { initialStitchState, nextWindow, type StitchConfig, stitch } from "./internal/stitcher.js";
 import { normalizeText, splitText } from "./internal/text.js";
-import { TTS_MODELS, type TtsModelKey } from "./models.js";
+import { type Sampling, TTS_MODELS, type TtsModelKey } from "./models.js";
 import { SAMPLE_RATE, type TtsBroadcast, type TtsProtocol } from "./protocol.js";
 
 const MAX_REF_SECONDS = 20;
@@ -76,19 +76,12 @@ type DType = "fp32" | "fp16" | "q4" | "q4f16" | "q8";
 type DTypeMap = Record<"embed_tokens" | "speech_encoder" | "language_model" | "conditional_decoder", DType>;
 type Target = "webgpu-f16" | "webgpu" | "wasm";
 
-/**
- * Sampling as in Resemble's reference `generate()` (tts_turbo.py / tts.py). Greedy decoding is deterministic, so a
- * voice + sentence that never emits stop-of-speech does so every time — the model then babbles until the token cap.
- * The original's classifier-free guidance (cfg_weight 0.5) needs a batch-2 unconditioned pass the ONNX export lacks.
+/*
+ * Sampling (defaults in TTS_MODELS[key].sampling, overridable per call) is as in Resemble's reference `generate()`.
+ * Greedy decoding is deterministic, so a voice + sentence that never emits stop-of-speech does so every time — the
+ * model then babbles until the token cap. The original's classifier-free guidance (cfg_weight 0.5) needs a batch-2
+ * unconditioned pass the ONNX export lacks.
  */
-interface Sampling {
-  temperature: number;
-  /** 0 = no top-k limit */
-  topK: number;
-  topP: number;
-  minP: number;
-  repetitionPenalty: number;
-}
 
 const WINDOW_SHAPE = { context: 8, lookahead: 4, samplesPerToken: 960, fadeSamples: 480 } as const;
 /**
@@ -102,9 +95,8 @@ const STREAM_WINDOWS: StitchConfig = { first: 15, size: 60, ...WINDOW_SHAPE };
  */
 const WHOLE_SENTENCE: StitchConfig = { first: Number.POSITIVE_INFINITY, size: Number.POSITIVE_INFINITY, ...WINDOW_SHAPE };
 
-const RUNTIME: Record<TtsModelKey, { dtypes: Record<Target, DTypeMap>; sampling: Sampling; stream: StitchConfig }> = {
+const RUNTIME: Record<TtsModelKey, { dtypes: Record<Target, DTypeMap>; stream: StitchConfig }> = {
   "chatterbox-turbo": {
-    sampling: { temperature: 0.8, topK: 1000, topP: 0.95, minP: 0, repetitionPenalty: 1.2 },
     stream: STREAM_WINDOWS,
     dtypes: {
       "webgpu-f16": { embed_tokens: "fp16", speech_encoder: "q4f16", language_model: "q4f16", conditional_decoder: "q4" },
@@ -113,7 +105,6 @@ const RUNTIME: Record<TtsModelKey, { dtypes: Record<Target, DTypeMap>; sampling:
     },
   },
   chatterbox: {
-    sampling: { temperature: 0.8, topK: 0, topP: 1, minP: 0.05, repetitionPenalty: 1.2 },
     stream: WHOLE_SENTENCE,
     dtypes: {
       "webgpu-f16": { embed_tokens: "fp32", speech_encoder: "fp32", language_model: "q4f16", conditional_decoder: "fp32" },
@@ -360,10 +351,11 @@ async function synthStream(
   text: string,
   speaker: SpeakerTensors,
   onAudio: (pcm: Float32Array) => void,
-  opts: { signal: AbortSignal; maxNewTokens?: number; exaggeration?: number | undefined },
+  opts: { signal: AbortSignal; maxNewTokens?: number; exaggeration?: number | undefined; sampling?: Partial<Sampling> | undefined },
 ): Promise<void> {
   const { model, tokenizer, key } = require();
-  const { sampling, stream } = RUNTIME[key];
+  const { stream } = RUNTIME[key];
+  const sampling: Sampling = { ...TTS_MODELS[key].sampling, ...opts.sampling };
   const normalized = normalizeText(text);
   const inputs = tokenizer(normalized) as { input_ids: Tensor; attention_mask: Tensor };
   const promptLen = inputs.input_ids.dims[1] ?? 0;
@@ -434,7 +426,7 @@ const { broadcast } = exposeRpc<TtsProtocol, TtsBroadcast>({
 
   encode: ({ pcm, sampleRate }) => serial(() => encode(pcm, sampleRate)),
 
-  generate: ({ text, conditioning, exaggeration }, { signal, emit }) =>
+  generate: ({ text, conditioning, exaggeration, sampling }, { signal, emit }) =>
     serial(async () => {
       const speaker = deserialise(conditioning);
       const sentences = splitText(text);
@@ -449,7 +441,7 @@ const { broadcast } = exposeRpc<TtsProtocol, TtsBroadcast>({
           emit({ sentence: { index, count: sentences.length, text: sentence }, pcm, genMs: now - last, final }, [pcm.buffer]);
           last = now;
         };
-        await synthStream(sentence, speaker, (pcm) => piece(pcm, false), { signal, exaggeration });
+        await synthStream(sentence, speaker, (pcm) => piece(pcm, false), { signal, exaggeration, sampling });
         piece(new Float32Array(0), true); // sentence boundary marker for karaoke + buffering stats
       }
       signal.throwIfAborted();

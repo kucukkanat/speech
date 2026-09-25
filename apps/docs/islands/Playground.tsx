@@ -49,7 +49,7 @@ export default function Playground() {
         <TranscribePanel advanced />
       </div>
       <div role="tabpanel" hidden={tab !== "voices"}>
-        <VoicesPanel />
+        <VoicesPanel advanced />
       </div>
     </Panel>
   );
