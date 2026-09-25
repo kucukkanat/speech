@@ -1,0 +1,144 @@
+# @kucukkanat/speech-react
+
+React hooks for the [`@kucukkanat`](../..) speech SDKs. Each hook takes the engine you created — no provider, no
+context, nothing hidden — and re-renders only when something visible changes.
+
+```sh
+bun add @kucukkanat/speech-react @kucukkanat/tts @kucukkanat/stt @kucukkanat/voices
+```
+
+| Hook | For |
+|---|---|
+| `useEngine(engine)` | model status: `ready`, `loading`, `progress`, typed `error`, `load()` |
+| `useSpeak(tts)` | `speak()`, `stop()`, `play(clip)`, `state`, current `sentence`, `spoken` sentences, `stats`, `analyser` |
+| `useTranscription(stt)` | `start()`, `stop()`, `clear()`, `listening`, `text` (accumulates across sessions), `partial` |
+| `useVoices(store)` | the voice library, kept up to date, with `create` / `update` / `remove` / `restore` |
+| `useAudioLevel(analyser, onLevel)` | a level meter that calls you every frame *without* re-rendering |
+| `useCapabilities()` | WebGPU / microphone / secure-context support, detected once |
+
+## Speak, with karaoke
+
+```tsx
+import { useEngine, useSpeak } from "@kucukkanat/speech-react";
+import { createTTS } from "@kucukkanat/tts";
+import { useState } from "react";
+
+// Create engines once, outside components: each holds a model in GPU memory.
+const tts = createTTS();
+
+export function Reader() {
+  const { ready, loading, progress, load } = useEngine(tts);
+  const { speak, stop, active, spoken, sentence, error } = useSpeak(tts);
+  const [text, setText] = useState("Hello there. Every sentence lights up as you hear it.");
+
+  if (!ready) {
+    return (
+      <button type="button" onClick={() => load()} disabled={loading}>
+        {loading ? `Loading ${Math.round((progress?.progress ?? 0) * 100)}%` : "Load voice model"}
+      </button>
+    );
+  }
+  return (
+    <div>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} />
+      <button type="button" onClick={() => (active ? stop() : speak(text))}>
+        {active ? "Stop" : "Speak"}
+      </button>
+      <p>
+        {spoken.map((s) => (
+          <mark key={s.index} style={{ background: s.index === sentence?.index ? "gold" : "transparent" }}>
+            {s.text}{" "}
+          </mark>
+        ))}
+      </p>
+      {error instanceof Error && <p role="alert">{error.message}</p>}
+    </div>
+  );
+}
+```
+
+## Live transcription
+
+```tsx
+import { useTranscription } from "@kucukkanat/speech-react";
+import { createSTT } from "@kucukkanat/stt";
+import { useRef } from "react";
+
+const stt = createSTT();
+
+export function Dictation() {
+  const meter = useRef<HTMLDivElement>(null);
+  const { start, stop, clear, listening, starting, committed, partial, error } = useTranscription(stt, {
+    // Called for every audio frame — update the DOM directly instead of re-rendering.
+    onLevel: (level) => meter.current?.style.setProperty("--level", String(level)),
+  });
+  return (
+    <div>
+      <button type="button" onClick={() => (listening ? void stop() : start())} disabled={starting}>
+        {listening ? "Stop" : starting ? "Starting…" : "Dictate"}
+      </button>
+      <button type="button" onClick={clear}>Clear</button>
+      <div ref={meter} style={{ transform: "scaleX(var(--level, 0))", height: 4, background: "tomato" }} />
+      <p>
+        {committed} <span style={{ opacity: 0.5 }}>{partial}</span>
+      </p>
+      {error instanceof Error && <p role="alert">{error.message}</p>}
+    </div>
+  );
+}
+```
+
+## A voice picker
+
+```tsx
+import { useVoices } from "@kucukkanat/speech-react";
+import { createVoiceStore } from "@kucukkanat/voices";
+
+const voices = createVoiceStore();
+
+export function VoicePicker({ value, onChange }: { value: string | null; onChange: (id: string) => void }) {
+  const { voices: list, loading, error } = useVoices(voices);
+  if (loading) return <p>Loading voices…</p>;
+  if (error) return <p role="alert">{error.message}</p>;
+  return (
+    <select value={value ?? ""} onChange={(e) => onChange(e.target.value)}>
+      {list.map((v) => (
+        <option key={v.id} value={v.id}>
+          {v.name} ({v.seconds.toFixed(0)} s)
+        </option>
+      ))}
+    </select>
+  );
+}
+```
+
+## Visualising audio
+
+```tsx
+import { useAudioLevel, useSpeak } from "@kucukkanat/speech-react";
+import { createTTS } from "@kucukkanat/tts";
+import { useRef } from "react";
+
+const tts = createTTS();
+
+export function Pulse() {
+  const dot = useRef<HTMLDivElement>(null);
+  const { speak, analyser } = useSpeak(tts);
+  useAudioLevel(analyser, (level) => dot.current?.style.setProperty("transform", `scale(${1 + level})`), { gain: 4 });
+  return (
+    <button type="button" onClick={() => speak("Watch the dot breathe with my voice.")}>
+      <div ref={dot} style={{ width: 16, height: 16, borderRadius: 8, background: "orchid" }} />
+    </button>
+  );
+}
+```
+
+## Notes
+
+- Works with React 18.3+ and 19; the bundle is marked `"use client"` for React Server Components frameworks.
+- Hooks are SSR-safe: on the server they render the engines' current (idle) state.
+- Unmounting stops a speech or transcription the hook started.
+
+## License
+
+MIT

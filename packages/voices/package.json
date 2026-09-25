@@ -1,0 +1,45 @@
+{
+  "name": "@kucukkanat/voices",
+  "version": "0.0.0",
+  "description": "A persistent voice library for @kucukkanat/tts: IndexedDB storage, bundled demo voices, clip preparation and a persistent conditioning cache.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "@kucukkanat/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "assets",
+    "!**/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kucukkanat/speech.git",
+    "directory": "packages/voices"
+  },
+  "keywords": [
+    "voice-cloning",
+    "tts",
+    "indexeddb",
+    "voices",
+    "speech"
+  ],
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "dependencies": {
+    "@kucukkanat/speech-core": "workspace:^",
+    "@kucukkanat/speech-audio": "workspace:^",
+    "idb": "^8.0.3"
+  }
+}

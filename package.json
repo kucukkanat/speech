@@ -1,0 +1,38 @@
+{
+  "name": "kucukkanat-speech",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter @kucukkanat/studio dev",
+    "build": "bun scripts/build-all.ts",
+    "typecheck": "bun scripts/typecheck-all.ts",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "bun test --conditions=@kucukkanat/source --coverage packages",
+    "test:models": "RUN_MODEL_TESTS=1 bun test --conditions=@kucukkanat/source --timeout 900000 models.test",
+    "test:e2e": "bunx playwright test -c apps/studio/playwright.config.ts",
+    "test:consumers": "bun scripts/test-consumers.ts",
+    "docs:check": "bun scripts/doctest.ts",
+    "check:packages": "bun scripts/check-packages.ts",
+    "changeset": "changeset",
+    "release": "bun run build && bun scripts/release.ts",
+    "version": "changeset version && bun install"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@biomejs/biome": "^2.5.14",
+    "@changesets/cli": "^3.0.3",
+    "@happy-dom/global-registrator": "^20.14.5",
+    "@playwright/test": "^1.63.0",
+    "@types/bun": "^1.4.2",
+    "@webgpu/types": "^0.1.74",
+    "fake-indexeddb": "^6.2.5",
+    "happy-dom": "^20.14.5",
+    "publint": "^0.3.24",
+    "typescript": "~5.9"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "@kucukkanat/stt",
+  "version": "0.0.0",
+  "description": "On-device, streaming speech-to-text for the browser (Moonshine, Voxtral Realtime on WebGPU/WASM): live microphone transcription, files, typed errors.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "@kucukkanat/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./worker": {
+      "@kucukkanat/source": "./src/stt.worker.ts",
+      "default": "./dist/stt.worker.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kucukkanat/speech.git",
+    "directory": "packages/stt"
+  },
+  "keywords": [
+    "stt",
+    "speech-to-text",
+    "asr",
+    "transcription",
+    "moonshine",
+    "voxtral",
+    "webgpu",
+    "transformers.js",
+    "on-device"
+  ],
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "//dependencies": "@huggingface/transformers is pinned exactly: the worker depends on model-specific APIs of this release.",
+  "dependencies": {
+    "@kucukkanat/speech-core": "workspace:^",
+    "@kucukkanat/speech-audio": "workspace:^",
+    "@huggingface/transformers": "4.3.0"
+  }
+}

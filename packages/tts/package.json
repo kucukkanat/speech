@@ -1,0 +1,51 @@
+{
+  "name": "@kucukkanat/tts",
+  "version": "0.0.0",
+  "description": "On-device, voice-cloning text-to-speech for the browser (Chatterbox on WebGPU/WASM): streaming playback, karaoke timing, typed errors.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "@kucukkanat/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./worker": {
+      "@kucukkanat/source": "./src/tts.worker.ts",
+      "default": "./dist/tts.worker.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kucukkanat/speech.git",
+    "directory": "packages/tts"
+  },
+  "keywords": [
+    "tts",
+    "text-to-speech",
+    "voice-cloning",
+    "chatterbox",
+    "webgpu",
+    "transformers.js",
+    "on-device"
+  ],
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "//dependencies": "@huggingface/transformers is pinned exactly: the worker relies on its internals (LM-only generate, decoder session access).",
+  "dependencies": {
+    "@kucukkanat/speech-core": "workspace:^",
+    "@kucukkanat/speech-audio": "workspace:^",
+    "@huggingface/transformers": "4.3.0"
+  }
+}

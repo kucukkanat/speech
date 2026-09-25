@@ -1,0 +1,70 @@
+{
+  "name": "@kucukkanat/speech-react",
+  "version": "0.0.0",
+  "description": "React hooks for the @kucukkanat speech SDKs: model status, speaking with karaoke timing, live transcription, voice libraries.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "@kucukkanat/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kucukkanat/speech.git",
+    "directory": "packages/speech-react"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "tts",
+    "stt",
+    "speech",
+    "voice"
+  ],
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "dependencies": {
+    "@kucukkanat/speech-core": "workspace:^",
+    "@kucukkanat/speech-audio": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": "^18.3.0 || ^19.0.0",
+    "@kucukkanat/tts": "workspace:^",
+    "@kucukkanat/stt": "workspace:^",
+    "@kucukkanat/voices": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@kucukkanat/tts": {
+      "optional": true
+    },
+    "@kucukkanat/stt": {
+      "optional": true
+    },
+    "@kucukkanat/voices": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@kucukkanat/tts": "workspace:^",
+    "@kucukkanat/stt": "workspace:^",
+    "@kucukkanat/voices": "workspace:^"
+  }
+}

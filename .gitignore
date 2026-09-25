@@ -1,0 +1,12 @@
+node_modules
+dist
+*.local
+*.tgz
+.doctest
+.cache
+coverage
+test-results
+playwright-report
+fixtures/*/node_modules
+fixtures/*/bun.lock
+fixtures/*/dist

@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@import "./styles/tokens.css";
+
+:root {
+  --accent-gradient: linear-gradient(115deg, var(--color-accent-a) 0%, var(--color-accent-b) 55%, var(--color-accent-c) 100%);
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-ink-950);
+  color: #e9e9f4;
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01", "ss03";
+  overflow-x: hidden;
+}
+
+/* Ambient glows */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20vmax;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(40vmax 30vmax at 18% 8%, rgb(124 108 255 / 0.2), transparent 60%),
+    radial-gradient(34vmax 26vmax at 88% 18%, rgb(228 107 255 / 0.13), transparent 62%),
+    radial-gradient(40vmax 32vmax at 60% 108%, rgb(255 138 122 / 0.1), transparent 60%), var(--color-ink-950);
+}
+
+/* Film grain */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: rgb(228 107 255 / 0.35);
+}
+
+@utility glass {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.055), rgb(255 255 255 / 0.025));
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 20px 50px -24px rgb(0 0 0 / 0.7);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+@utility glass-strong {
+  background: linear-gradient(180deg, rgb(22 22 36 / 0.92), rgb(14 14 24 / 0.94));
+  border: 1px solid rgb(255 255 255 / 0.09);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    0 40px 90px -30px rgb(0 0 0 / 0.85);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+}
+
+@utility bg-accent {
+  background-image: var(--accent-gradient);
+}
+
+@utility text-accent {
+  background-image: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility ring-accent {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.14) inset,
+    0 10px 40px -10px rgb(228 107 255 / 0.55);
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Thin, subtle scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.14) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(228 107 255 / 0.8);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Range input */
+input[type="range"].vl-range {
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--color-accent-a) 0%,
+    var(--color-accent-b) var(--fill, 50%),
+    rgb(255 255 255 / 0.1) var(--fill, 50%)
+  );
+  cursor: pointer;
+}
+input[type="range"].vl-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px rgb(228 107 255 / 0.25),
+    0 4px 12px rgb(0 0 0 / 0.5);
+  transition: transform 0.15s;
+}
+input[type="range"].vl-range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+input[type="range"].vl-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgb(228 107 255 / 0.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must win over every component's own timing */
+    animation-duration: 0.001ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: see above */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: see above */
+    transition-duration: 0.001ms !important;
+  }
+}

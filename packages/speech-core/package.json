@@ -1,0 +1,58 @@
+{
+  "name": "@kucukkanat/speech-core",
+  "version": "0.0.0",
+  "description": "Shared plumbing for the @kucukkanat speech SDKs: typed worker RPC, engine status, typed errors, capability detection and a Vite plugin.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "@kucukkanat/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./vite": {
+      "@kucukkanat/source": "./src/vite.ts",
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kucukkanat/speech.git",
+    "directory": "packages/speech-core"
+  },
+  "keywords": [
+    "speech",
+    "webgpu",
+    "web-worker",
+    "rpc",
+    "transformers.js"
+  ],
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "dependencies": {
+    "nanoevents": "^9.1.0"
+  },
+  "peerDependencies": {
+    "vite": ">=6"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}

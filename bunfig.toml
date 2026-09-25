@@ -1,0 +1,12 @@
+[install]
+exact = false
+
+[test]
+# Tests resolve sibling packages to their TypeScript sources via `--conditions=@kucukkanat/source` (see the root
+# "test" script); Bun 1.3 ignores a `conditions` key here.
+coverageSkipTestFiles = true
+coverageThreshold = 1.0
+# Code that only runs in worker threads, needs real browser APIs (WebGPU, Web Audio, getUserMedia) or a downloaded model
+# (the engine clients' load/generate paths) is exercised by real-worker integration tests, `bun run test:models` and the
+# Playwright E2E suite; Bun's unit coverage cannot instrument worker threads or run those paths without models.
+coveragePathIgnorePatterns = ["**/expose.ts", "**/*.worker.ts", "**/*.browser.ts", "**/spawn.ts", "**/client.ts", "**/test/**"]

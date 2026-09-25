@@ -1,0 +1,143 @@
+# @kucukkanat/stt
+
+On-device, streaming **speech-to-text for the browser**. Runs [Moonshine](https://huggingface.co/onnx-community/moonshine-base-ONNX)
+or [Voxtral Realtime](https://huggingface.co/onnx-community/Voxtral-Mini-4B-Realtime-2602-ONNX) on WebGPU (or WASM) in a
+Web Worker: no server, no API key, nothing leaves the device.
+
+- **Live microphone transcription in three lines**, with words appearing as you speak.
+- **One verb for every input**: a microphone, a file, a URL, raw PCM, or any async stream of audio frames.
+- **Committed vs partial text**: render the stable part solid and the still-changing tail dimmed.
+- **Awaitable, iterable, cancellable sessions** and typed errors (`mic-permission-denied`, `busy`, …).
+
+```sh
+bun add @kucukkanat/stt   # or npm i / pnpm add
+```
+
+## Quick start: the microphone
+
+```ts
+import { createSTT } from "@kucukkanat/stt";
+
+const stt = createSTT();
+const output = document.querySelector("#transcript");
+
+document.querySelector("#start")?.addEventListener("click", async () => {
+  const session = stt.listen(); // loads the model on first use, then opens the microphone
+  session.on("update", ({ committed, partial }) => {
+    if (output) output.textContent = `${committed} ${partial}`;
+  });
+  document.querySelector("#stop")?.addEventListener("click", () => session.stop(), { once: true });
+
+  const { text } = await session; // resolves after stop(), with the final text
+  console.log("Final:", text);
+});
+```
+
+`listen()` returns immediately; `await session.ready` resolves once audio is flowing — the moment to show "listening".
+The model downloads on first use (~158 MB for Moonshine) and is cached by the browser.
+
+## Transcribe a file, URL or recording
+
+```ts
+import { createSTT } from "@kucukkanat/stt";
+
+const stt = createSTT();
+const file = document.querySelector<HTMLInputElement>("input[type=file]")?.files?.[0];
+
+if (file) {
+  const { text } = await stt.transcribe(file); // wav, mp3, ogg, webm, m4a… (anything the browser decodes)
+  console.log(text);
+}
+
+const fromUrl = await stt.transcribe("/recordings/interview.mp3");
+console.log(fromUrl.text);
+```
+
+Finite inputs are decoded, resampled to 16 kHz and processed faster than real time.
+
+## Updates as a stream
+
+Sessions are async iterables of transcript updates:
+
+```ts
+import { createSTT } from "@kucukkanat/stt";
+
+const stt = createSTT();
+for await (const { text } of stt.transcribe("/recordings/meeting.wav")) {
+  console.log(text); // grows as each utterance is recognised
+}
+```
+
+## Your own audio source
+
+Pass any async iterable of mono `Float32Array` frames (16 kHz unless it has a `sampleRate` property), for example a
+WebRTC track you process yourself:
+
+```ts
+import { createSTT } from "@kucukkanat/stt";
+
+async function* frames(): AsyncGenerator<Float32Array> {
+  // yield 80 ms blocks of 16 kHz PCM as they arrive (any block size works)
+  yield new Float32Array(1280);
+}
+
+const stt = createSTT();
+const session = stt.transcribe(frames());
+session.on("update", ({ text }) => console.log(text));
+console.log((await session).text);
+```
+
+Use `openMicrophone()` from [`@kucukkanat/speech-audio`](../speech-audio) if you want the microphone frames for
+something else as well — a `Microphone` is exactly such a stream.
+
+## Models
+
+| Model | Size | Runs on | Streaming |
+|---|---|---|---|
+| `"moonshine-base"` (default) | ~158 MB | WebGPU or WASM | re-transcribes the current utterance live; commits at pauses |
+| `"voxtral-realtime"` | ~2.85 GB | WebGPU only | native: words appear ~0.5 s after they're said; 13 languages |
+
+```ts
+import { createSTT } from "@kucukkanat/stt";
+
+const stt = createSTT({ model: "voxtral-realtime" }); // throws `webgpu-required` on load without WebGPU
+await stt.load({ onProgress: (p) => console.log(`${Math.round(p.progress * 100)}%`) });
+```
+
+`stt.switchModel(key)` swaps models at runtime (the previous one is released); `stt.status` / `stt.subscribe` work
+exactly like in `@kucukkanat/tts`.
+
+## Stopping and cancelling
+
+- `session.stop()` stops reading input, waits for the last words, and resolves the final transcript.
+- If the model takes longer than `stopTimeoutMs` (default 15 s), it resolves with `complete: false` and the text so far.
+- An `AbortSignal` (`{ signal }`) cancels outright: the session rejects with the signal's reason.
+- One session runs at a time per engine; a second one rejects with `busy`.
+
+## Errors
+
+```ts
+import { createSTT, isSpeechError } from "@kucukkanat/stt";
+
+const stt = createSTT();
+try {
+  await stt.listen().ready;
+} catch (e) {
+  if (isSpeechError(e, "mic-permission-denied")) console.warn(e.message); // user-facing explanation
+  else if (isSpeechError(e, "webgpu-required")) console.warn("Pick Moonshine on this device.");
+  else throw e;
+}
+```
+
+Codes you may see: `mic-permission-denied`, `mic-not-found`, `mic-busy`, `mic-unsupported`, `mic-insecure-context`,
+`busy`, `decode-failed`, `webgpu-required`, `model-download-failed`, `worker-crashed`, `disposed`.
+
+## Bundlers and hosting
+
+Same as [`@kucukkanat/tts`](../tts#bundlers): the worker is picked up automatically by Vite (use
+`speechSdk()` from `@kucukkanat/speech-core/vite`), webpack 5 and Next.js; `@kucukkanat/stt/worker` is exported for
+custom setups. The microphone needs a secure context (HTTPS or localhost); cross-origin isolation is optional.
+
+## License
+
+MIT. Models: Moonshine (MIT, Useful Sensors) and Voxtral Mini Realtime (Apache-2.0, Mistral AI).

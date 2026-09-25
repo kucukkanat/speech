@@ -1,0 +1,27 @@
+name: E2E (real models)
+
+# Downloads ~0.9 GB of models, so it runs nightly and on demand rather than on every pull request.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - name: Cache models (the Playwright browser profile)
+        uses: actions/cache@v4
+        with:
+          path: apps/studio/.cache/pw-profile
+          key: pw-profile-${{ hashFiles('packages/tts/src/models.ts', 'packages/stt/src/models.ts', 'packages/*/src/*.worker.ts') }}
+      - run: bun run test:e2e
+      - name: Model integration tests (Node/Bun, CPU)
+        run: bun run test:models

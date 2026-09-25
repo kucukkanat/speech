@@ -1,0 +1,93 @@
+# @kucukkanat/speech-core
+
+Shared foundations of the [`@kucukkanat`](../..) speech SDKs. As an app developer you'll mostly use three things from
+here: the **Vite plugin**, **typed errors**, and **capability detection**. The rest (typed worker RPC, engine
+lifecycle) is for building engines of your own.
+
+```sh
+bun add @kucukkanat/speech-core
+```
+
+## Vite plugin
+
+```ts no-check
+// vite.config.ts
+import { speechSdk } from "@kucukkanat/speech-core/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [react(), speechSdk({ isolation: true })],
+});
+```
+
+It keeps `@kucukkanat/tts`, `@kucukkanat/stt`, `@kucukkanat/speech-audio` and transformers.js out of dependency
+pre-bundling (so their Web Workers stay detectable), emits ES-module workers, and — with `isolation: true` — serves dev
+and preview cross-origin isolated (`COOP: same-origin`, `COEP: credentialless`), which enables multi-threaded WASM.
+
+## Errors
+
+Every SDK failure is a `SpeechError` with a stable `code` and a user-presentable `message`:
+
+```ts
+import { isAbortError, isSpeechError, SpeechError } from "@kucukkanat/speech-core";
+
+function describe(e: unknown): string {
+  if (isAbortError(e)) return "Cancelled.";
+  if (isSpeechError(e, "mic-permission-denied")) return "Please allow the microphone.";
+  if (e instanceof SpeechError) return `${e.code}: ${e.message}`;
+  return "Something unexpected went wrong.";
+}
+console.log(describe(new SpeechError("busy", "One session at a time.")));
+```
+
+| Area | Codes |
+|---|---|
+| Engines | `worker-crashed`, `disposed`, `internal`, `unsupported-environment`, `insecure-context` |
+| Models | `model-download-failed`, `model-init-failed`, `model-not-loaded`, `webgpu-required`, `unknown-model` |
+| Speech | `empty-text`, `invalid-voice`, `unsupported-option`, `generation-failed`, `autoplay-blocked` |
+| Transcription | `busy`, `decode-failed` |
+| Microphone | `mic-permission-denied`, `mic-not-found`, `mic-busy`, `mic-unsupported`, `mic-insecure-context`, `mic-unknown` |
+| Voice library | `voice-not-found`, `built-in-read-only`, `db-blocked`, `quota-exceeded` |
+
+## Capabilities
+
+```ts
+import { detectCapabilities } from "@kucukkanat/speech-core";
+
+const caps = await detectCapabilities(); // never throws; everything is false during SSR
+if (!caps.webgpu) console.warn("No WebGPU: models will run on the CPU and be much slower.");
+if (!caps.secureContext) console.warn("The microphone needs HTTPS or localhost.");
+console.log(caps); // { webgpu, shaderF16, secureContext, crossOriginIsolated, microphone }
+```
+
+## Building your own engine
+
+`createRpcClient` / `exposeRpc` give you typed request/response calls to a Web Worker with streamed events,
+transferable buffers, `AbortSignal` cancellation (the worker gets its own signal), typed error round-trips and crash
+recovery. `createEngineCore` adds the model lifecycle (status store, deduplicated loading with progress, switching).
+
+```ts no-check
+// protocol.ts — shared by both sides
+export interface EchoProtocol {
+  shout: { arg: string; result: string; event: number }; // arg → result, streaming `event`s meanwhile
+}
+
+// echo.worker.ts
+import { exposeRpc } from "@kucukkanat/speech-core";
+exposeRpc<EchoProtocol>({
+  shout: async (text, { emit, signal }) => {
+    for (let i = 3; i > 0 && !signal.aborted; i--) emit(i);
+    return text.toUpperCase();
+  },
+});
+
+// main thread — keep `new Worker(new URL(...))` literal so bundlers find the worker
+import { createRpcClient } from "@kucukkanat/speech-core";
+const rpc = createRpcClient<EchoProtocol>(() => new Worker(new URL("./echo.worker.js", import.meta.url), { type: "module" }));
+const loud = await rpc.call("shout", "hello", { onEvent: (n) => console.log(n) }); // 3, 2, 1, then "HELLO"
+```
+
+## License
+
+MIT

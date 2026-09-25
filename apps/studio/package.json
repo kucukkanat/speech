@@ -1,0 +1,39 @@
+{
+  "name": "@kucukkanat/studio",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "predev": "bun run --cwd ../../packages/speech-core build",
+    "dev": "vite",
+    "prebuild": "bun run --cwd ../../packages/speech-core build",
+    "build": "tsc -p . && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p .",
+    "test": "bun test src"
+  },
+  "dependencies": {
+    "@kucukkanat/speech-audio": "workspace:*",
+    "@kucukkanat/speech-core": "workspace:*",
+    "@kucukkanat/speech-react": "workspace:*",
+    "@kucukkanat/stt": "workspace:*",
+    "@kucukkanat/tts": "workspace:*",
+    "@kucukkanat/voices": "workspace:*",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.48.0",
+    "motion": "^13.4.3",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@webgpu/types": "^0.1.74",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9",
+    "vite": "^8.3.1"
+  }
+}

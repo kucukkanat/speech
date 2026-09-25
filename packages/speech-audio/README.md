@@ -1,0 +1,88 @@
+# @kucukkanat/speech-audio
+
+Browser audio building blocks behind the [`@kucukkanat`](../..) speech SDKs — useful on their own:
+
+- **`openMicrophone()`**: microphone audio as an async iterable of 16 kHz frames (resampled in an AudioWorklet that
+  needs no bundler config), with levels and typed permission errors.
+- **`createPlayer()`**: gapless playback of PCM blocks as they're produced, with an analyser tap.
+- **`startRecording()`**: record a compressed clip with live level and elapsed time.
+- **`decodeAudio()` / `encodeWav()` / `resample()`**: decode any file or URL to mono PCM, write WAVs, change sample
+  rates (band-limited). WAV decoding and resampling are pure JS and work in workers, Node and Bun.
+
+```sh
+bun add @kucukkanat/speech-audio
+```
+
+## Microphone frames
+
+```ts
+import { isSpeechError } from "@kucukkanat/speech-core";
+import { openMicrophone } from "@kucukkanat/speech-audio";
+
+try {
+  const mic = await openMicrophone({ sampleRate: 16000 }); // asks for permission
+  mic.on("level", (rms) => console.log(rms.toFixed(3)));
+  setTimeout(() => mic.close(), 5000);
+  for await (const frame of mic) {
+    console.log(frame.length); // 1280 samples = 80 ms at 16 kHz
+  }
+} catch (e) {
+  if (isSpeechError(e, "mic-permission-denied")) console.warn(e.message);
+  else throw e;
+}
+```
+
+The worklet is loaded from a Blob URL. If your Content-Security-Policy doesn't allow `blob:` workers, serve the output of
+`micWorkletSource(name, frameSize, sampleRate)` yourself and pass `workletUrl`.
+
+## Gapless playback
+
+```ts
+import { createPlayer } from "@kucukkanat/speech-audio";
+
+const player = createPlayer(); // call from a user gesture the first time (autoplay policy)
+const tone = Float32Array.from({ length: 24000 }, (_, i) => 0.2 * Math.sin((2 * Math.PI * 440 * i) / 24000));
+const { start, end } = player.enqueue(tone, 24000); // AudioContext times, e.g. for synchronised highlighting
+player.enqueue(tone, 24000); // plays right after the first block, no gap
+player.on("drained", () => player.dispose());
+console.log(`plays ${start.toFixed(2)}–${end.toFixed(2)} s; ${player.buffered.toFixed(2)} s queued`);
+```
+
+## Recording a clip
+
+```ts
+import { startRecording } from "@kucukkanat/speech-audio";
+
+const recording = await startRecording({ maxSeconds: 15 });
+recording.on("level", (level) => console.log("level", level));
+recording.on("time", (seconds) => console.log(`${seconds.toFixed(1)} s`));
+setTimeout(() => recording.stop(), 5000);
+const blob = await recording.done; // audio/webm (or mp4/ogg, whatever the browser records)
+console.log(blob.type, blob.size);
+```
+
+## Files, WAV and resampling
+
+```ts
+import { decodeAudio, encodeWav, resample } from "@kucukkanat/speech-audio";
+
+const { pcm, sampleRate } = await decodeAudio("/speech.mp3"); // URL, File/Blob, ArrayBuffer, bytes
+const at16k = resample(pcm, sampleRate, 16000);
+const wav = encodeWav(at16k, 16000);
+console.log(wav.size);
+```
+
+## Level meters
+
+```ts
+import { createLevelMeter, createPlayer } from "@kucukkanat/speech-audio";
+
+const player = createPlayer();
+const bar = document.querySelector<HTMLElement>("#level");
+const stop = createLevelMeter(player.analyser, (level) => bar?.style.setProperty("width", `${level * 100}%`), { gain: 4 });
+setTimeout(stop, 10_000);
+```
+
+## License
+
+MIT

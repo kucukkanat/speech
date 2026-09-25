@@ -1,0 +1,43 @@
+{
+  "name": "@kucukkanat/speech-audio",
+  "version": "0.0.0",
+  "description": "Browser audio for the @kucukkanat speech SDKs: gapless streaming player, microphone frames as an async iterable, clip recorder, WAV and resampling.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "@kucukkanat/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kucukkanat/speech.git",
+    "directory": "packages/speech-audio"
+  },
+  "keywords": [
+    "audio",
+    "microphone",
+    "audioworklet",
+    "web-audio",
+    "wav",
+    "speech"
+  ],
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "dependencies": {
+    "@kucukkanat/speech-core": "workspace:^"
+  }
+}
